@@ -1,30 +1,29 @@
-use std::path::PathBuf;
+use super::currency::Currency;
 use std::collections::HashMap;
 
 pub struct Portfolio {
-    path: PathBuf,
-    data: HashMap<String, f32>,
+    data: HashMap<String, Currency>,
 }
 
 impl<'a> Portfolio {
-    pub fn new(path: PathBuf) -> Self {
-        Portfolio { path, data: HashMap::new() }
+    pub fn new() -> Self {
+        Portfolio { data: HashMap::new() }
     }
 
-    pub fn read_from_file(path: PathBuf) -> Self {
-        Portfolio::new(path)
-    }
-
-    pub fn save(&self) {
-        
-    }
-
-    pub fn categories_mut (&'a mut self) -> impl Iterator<Item=(&'a String, &'a mut f32)> {
+    pub fn data_mut (&'a mut self) -> impl Iterator<Item=(&'a String, &'a mut Currency)> {
         self.data.iter_mut()
     }
 
+    pub fn categories(&'a self) -> impl Iterator<Item=&'a String> {
+        self.data.keys()
+    }
+
+    pub fn values(&self) -> impl Iterator<Item=&Currency> {
+        self.data.values()
+    }
+
     pub fn add_category(&mut self, category: String, initial_value: f32) {
-        self.data.insert(category, initial_value);
+        self.data.insert(category, Currency(initial_value));
     }
 }
 

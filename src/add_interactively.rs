@@ -1,10 +1,11 @@
 use std::path::PathBuf;
 use std::io::{BufRead, Write};
+
+use super::csv;
 use super::portfolio::Portfolio;
 
 pub fn add (file_name: Option<PathBuf>) -> Result<(), String> {
     //TODO handle non-tty stdin
-    println!("Add fn");
     let (portfolio, path) = match file_name {
         Some(name) => (read_portfolio(&name), name),
         None => {
@@ -14,7 +15,6 @@ pub fn add (file_name: Option<PathBuf>) -> Result<(), String> {
         },
     };
 
-    println!("Action");
     if let Some(p) = portfolio {
         update_categories(p);
     } else {
@@ -29,7 +29,7 @@ fn promt_file_name() -> PathBuf {
 }
 
 fn read_portfolio (path: &PathBuf) -> Option<Portfolio> {
-    None
+    csv::read_portfolio(path).ok()
 }
 
 fn create_new_portfolio(path: PathBuf) {
@@ -39,11 +39,11 @@ fn create_new_portfolio(path: PathBuf) {
     let mut response = String::new();
     std::io::stdin().read_line(&mut response).unwrap();
 
-    if response.len() == 1 && response.chars().next().unwrap() == 'y'  { //TODO compare case-insensitive
+    if response.len() == 1 && response.chars().next().unwrap() != 'y'  { //TODO compare case-insensitive
         return;
     }
 
-    let mut portfolio = Portfolio::new(path);
+    let mut portfolio = Portfolio::new();
     println!("Please enter the categories with their initial values. If omitted, the value will be 0");
     println!("Example: \ncash 100\nbonds 1000\nstocks\n<Ctrl-D>");
     println!("This will make a portfolio as the following:\ncash - 100\nbonds - 1000\nstocks - 0");
@@ -60,13 +60,15 @@ fn create_new_portfolio(path: PathBuf) {
         portfolio.add_category(category.unwrap().to_string(), value);
     }
 
-    portfolio.save();
-
     println!("Your new portfolio:\n{}", portfolio);
+    
+    if let Err(s) = csv::save_portfolio(&path, portfolio) {
+        eprintln!("{}", s);
+    }
 }
 
 fn update_categories(mut portfolio: Portfolio) {
-    for (category, current_amount) in portfolio.categories_mut() {
+    for (category, current_amount) in portfolio.data_mut() {
         loop {
             print!("Amount for {}: ", category);
             let mut amount = String::new();
@@ -79,7 +81,7 @@ fn update_categories(mut portfolio: Portfolio) {
                 .and_then(|f| if f >= 0.0 { Ok(f) } else { Err(String::from(error_msg)) });
 
             match amount {
-                Ok(f) => { *current_amount = f; break },
+                Ok(f) => { **current_amount = f; break },
                 Err(e) => {
                     eprintln!("{}", e);
                     eprintln!("Sorry, try again");

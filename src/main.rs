@@ -1,4 +1,6 @@
+mod currency;
 mod portfolio;
+mod csv;
 mod add_interactively;
 mod show;
 mod files;
