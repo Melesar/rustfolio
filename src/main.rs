@@ -28,11 +28,13 @@ fn main() {
     }
 
     let file_name : Option<String> = description.optional_value_of("file").unwrap_or(None);
+
+    //TODO handle non-tty stdin
     let result = if description.value_of("add").unwrap() {
         add_interactively::add(file_name
             .and_then(|f| files::get_full_path(f).map_or_else(
                 |e| { eprintln!("Failed to handle file name: {}", e); None},
-                |f| Some(f)))
+                |mut f| { f.set_extension("csv"); Some(f) }))
         )
     } else {
         Ok(())

@@ -3,12 +3,6 @@ use std::ops::{Deref, DerefMut};
 
 pub struct Currency(pub f32);
 
-impl Currency {
-    pub fn to_bytes(&self) -> [u8; 4] {
-        self.0.to_le_bytes()
-    }
-}
-
 impl Deref for Currency {
     type Target = f32;
 

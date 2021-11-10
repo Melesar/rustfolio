@@ -16,9 +16,8 @@ pub fn read_portfolio(path: &PathBuf) -> Result<Portfolio, String> {
         .map(|v| v.parse::<f32>().map_err(|_| String::from("Failed to read portfolio file. Invalid data format")))
         .collect::<Vec<Result<f32, String>>>();
 
-    for index in 1..headers.len() {
-        let value = values[index].as_ref()?;
-        portfolio.add_category(headers[index].to_string(), *value);
+    for (header, value) in headers.into_iter().zip(values.into_iter()) {
+        portfolio.add_category(header.to_string(), value?);
     }
 
     Ok(portfolio)
@@ -27,6 +26,6 @@ pub fn read_portfolio(path: &PathBuf) -> Result<Portfolio, String> {
 pub fn save_portfolio(path: &PathBuf, portfolio: Portfolio) -> Result<(), String> {
     let mut writer = csv::Writer::from_path(path).map_err(|e| e.to_string())?;
     writer.write_record(portfolio.categories()).unwrap();
-    writer.write_record(portfolio.values().map(|c| c.to_bytes())).unwrap();
+    writer.write_record(portfolio.values().map(|c| c.to_string())).unwrap();
     Ok(())
 }
