@@ -1,16 +1,12 @@
 mod portfolio;
-mod add;
+mod add_interactively;
 mod show;
 mod files;
 
-use args::{Args, ArgsError};
+use args::Args;
 use getopts::Occur;
 
-use std::path::PathBuf;
 use std::process::exit;
-
-use add::add;
-
 
 fn main() {
     let mut description = Args::new("rustfolio", "Program for simple portfolio management");
@@ -24,14 +20,14 @@ fn main() {
         exit(1);
     }
 
-    if description.has_value("h") {
+    if description.value_of("help").unwrap() {
         println!("{}", description.full_usage());
         return;
     }
 
-    let file_name : Option<String> = description.optional_value_of("f").unwrap_or(None);
-    let result = if description.has_value("a") {
-        add(file_name
+    let file_name : Option<String> = description.optional_value_of("file").unwrap_or(None);
+    let result = if description.value_of("add").unwrap() {
+        add_interactively::add(file_name
             .and_then(|f| files::get_full_path(f).map_or_else(
                 |e| { eprintln!("Failed to handle file name: {}", e); None},
                 |f| Some(f)))
