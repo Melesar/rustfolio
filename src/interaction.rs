@@ -4,8 +4,8 @@ use std::fmt::Display;
 const MAX_VISIBLE_OPTIONS : usize  = 4; 
 
 use crossterm::{
-    cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveToPreviousLine, MoveTo},
-    terminal::{self, enable_raw_mode, disable_raw_mode, ScrollUp, Clear, ClearType},
+    cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveTo},
+    terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType},
     style::{SetAttribute, Attribute, SetForegroundColor, ResetColor, Color, Print},
     event::{read, Event, KeyCode},
     queue, execute
@@ -26,6 +26,7 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T>
     stdout.flush().unwrap();
     
     let initial_cursor_position = cursor::position().unwrap_or_default();
+    let move_to_start = MoveTo(initial_cursor_position.0, initial_cursor_position.1);
     let mut all_options : Vec<T> = iter.collect();
     let mut transformed_options : Vec<String> = all_options.iter().map(tranform).collect();
     let mut current_filter = String::new();
@@ -47,8 +48,7 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T>
                 },
                 KeyCode::Backspace => {
                     current_filter.pop();
-                    let move_to = MoveTo(initial_cursor_position.0, initial_cursor_position.1);
-                    execute!(stdout, move_to, Clear(ClearType::UntilNewLine), Print(&current_filter), SavePosition).unwrap();
+                    execute!(stdout, move_to_start, Clear(ClearType::UntilNewLine), Print(&current_filter), SavePosition).unwrap();
                     current_options = apply_filter(&current_filter, &transformed_options);
                     draw_options(&mut stdout, &current_selection, &current_options);
                 },
@@ -78,9 +78,11 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T>
     }
 
     let selection = transformed_options.remove(selected_option);
-    queue!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), Print(selection), MoveToNextLine(1)).unwrap_or_default();
-
+    queue!(stdout, move_to_start, Clear(ClearType::UntilNewLine)).unwrap_or_default();
+    queue!(stdout, SetForegroundColor(Color::DarkGreen), Print(selection), ResetColor).unwrap_or_default();
+    queue!(stdout, MoveToNextLine(1)).unwrap_or_default();
     stdout.flush().unwrap_or_default();
+
     disable_raw_mode().unwrap_or_default();
 
     Some(all_options.remove(selected_option))
@@ -98,6 +100,7 @@ fn apply_filter<'a>(filter: &str, all_options: &'a[String]) -> Vec<(usize, &'a S
     all_options.iter().filter(|s| s.contains(filter)).enumerate().collect()
 }
 
+//TODO handle large number of options
 fn draw_options<U: Display>(stdout: &mut Stdout, selection: &Option<usize>, current_options: &[(usize, &U)]) {
     queue!(stdout, RestorePosition, MoveToNextLine(1)).unwrap_or_default();
 
