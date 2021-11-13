@@ -46,7 +46,7 @@ fn select_portfolio_file() -> Option<PathBuf> {
         return Some(files.remove(0));
     }
 
-    interaction::select_one("Select portfolio", files.into_iter())
+    interaction::select_one("Select portfolio", files.into_iter(), |f| f.file_stem().map_or(String::new(), |stem| stem.to_string_lossy().to_string()))
 }
 
 fn ask_for_new_file() -> Result<PathBuf, String> {
