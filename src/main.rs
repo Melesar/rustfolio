@@ -1,3 +1,4 @@
+mod interaction;
 mod currency;
 mod portfolio;
 mod csv;

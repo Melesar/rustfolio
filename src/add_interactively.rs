@@ -3,6 +3,7 @@ use std::io::{BufRead, Write};
 
 use super::csv;
 use super::portfolio::Portfolio;
+use super::interaction;
 
 pub fn add (file_name: Option<PathBuf>) -> Result<(), String> {
     let (portfolio, path) = match file_name {
@@ -45,49 +46,19 @@ fn select_portfolio_file() -> Option<PathBuf> {
         return Some(files.remove(0));
     }
 
-    let mut file_list = String::new();
-    for (i, file) in files.iter().enumerate() {
-        file_list.push_str(&format!("{}. {}\n", i + 1, file.file_stem().unwrap().to_string_lossy()))
-    }
-
-    loop {
-        println!("{}", file_list);
-        print!("Select portfolio to update (number from 1 to {}): ", files.len());
-
-        std::io::stdout().flush().unwrap();
-
-        let mut choice = String::new();
-        std::io::stdin().read_line(&mut choice).unwrap();
-
-        match choice.trim().parse::<usize>() {
-            Ok(index) => { 
-                if index <= files.len() {
-                    return Some(files.remove(index - 1));
-                } else {
-                    println!("Sorry, try again");
-                }
-            },
-            Err(_) => println!("Sorry, try again"),
-        }
-    }
+    interaction::select_one("Select portfolio", files.into_iter())
 }
 
 fn ask_for_new_file() -> Result<PathBuf, String> {
-    loop {
-        print!("Enter your portfolio name: ");
-        std::io::stdout().flush().unwrap();
-        let mut response = String::new();
-        std::io::stdin().read_line(&mut response).unwrap();
-        
-        let temp_path = std::path::PathBuf::from(response.trim());
-        let stem = temp_path.file_stem();
-        if let Some(stem) = stem {
-            return super::files::get_full_path(stem)
+    let portfolio_name = interaction::ask_for_input("Your portfolio name");
+    let temp_path = std::path::PathBuf::from(portfolio_name.trim());
+    match temp_path.file_stem() {
+        Some(stem) => {
+            super::files::get_full_path(stem)
                 .and_then(|mut path| { path.set_extension("csv"); Ok(path) })
-                .map_err(|e| e.to_string());
-        } else {
-            println!("Please enter a valid file name");
-        }
+                .map_err(|e| e.to_string())
+        },
+        None => Err(String::from("Invalid portfolio name")),
     }
 }
  
@@ -97,21 +68,13 @@ fn read_portfolio (path: &PathBuf) -> Result<Portfolio, String> {
 }
 
 fn create_new_portfolio(path: PathBuf) {
-    print!("A portfolio at {} was not found. Create? [Y/n] ", path.to_string_lossy());
-    std::io::stdout().flush().unwrap();
-
-    let mut response = String::new();
-    std::io::stdin().read_line(&mut response).unwrap();
-
-    if response.len() == 1 && response.chars().next().unwrap() != 'y'  { //TODO compare case-insensitive
+    let portfolio_name = path.file_stem().unwrap();
+    let confirmation_label = format!("Portfolio {} doesn't exist yet. Create?", portfolio_name.to_string_lossy());
+    if !interaction::confirmation(&confirmation_label) { 
         return;
     }
 
     let mut portfolio = Portfolio::new();
-    println!("Please enter the categories with their initial values. If omitted, the value will be 0");
-    println!("Example: \ncash 100\nbonds 1000\nstocks\n<Ctrl-D>");
-    println!("This will make a portfolio as the following:\ncash - 100\nbonds - 1000\nstocks - 0");
-
     let stdin = std::io::stdin();
     let mut lines = stdin.lock().lines();
     while let Some(line) = lines.next() {

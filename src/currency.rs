@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::ops::{Deref, DerefMut};
 
+#[derive(Copy, Clone, Debug)]
 pub struct Currency(pub f32);
 
 impl Deref for Currency {
