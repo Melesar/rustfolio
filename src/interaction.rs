@@ -1,7 +1,7 @@
 use std::io::{Write, Stdout};
 use std::fmt::Display;
 
-const MAX_VISIBLE_OPTIONS : usize  = 4; 
+const MAX_VISIBLE_OPTIONS : usize  = 5; 
 
 use crossterm::{
     cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveTo, MoveToPreviousLine, MoveRight},
@@ -94,45 +94,7 @@ pub fn ask_for_input<F, T>(label: &str, validation: F) -> T
     where F : Fn(&String) -> Result<T, String>,
           T : Display
 {
-    let mut stdout = std::io::stdout();
-
-    draw_promt(&mut stdout, label);
-    execute!(stdout, SavePosition).unwrap_or_default();
-
-    enable_raw_mode().unwrap_or_default();
-
-    let mut input = String::new();
-    let mut result = validation(&input);
-    loop {
-        match read().unwrap() {
-            Event::Key(k) => match k.code {
-                KeyCode::Char(c) => {
-                    input.push(c);
-                    result = validation(&input);
-                    execute!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), Print(&input)).unwrap_or_default();
-                },
-                KeyCode::Backspace => {
-                    input.pop();
-                    result = validation(&input);
-                    execute!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), Print(&input)).unwrap_or_default();
-                },
-                KeyCode::Enter => {
-                    match result.as_ref() {
-                        Ok(_) => break,
-                        Err(e) => execute!(stdout, Print(" "), SetForegroundColor(Color::Red), Print(format!("[{}]", e)), ResetColor).unwrap_or_default(),
-                    }
-                }
-                _ => (),
-            },
-            _ => (),
-        }
-    }
-
-    disable_raw_mode().unwrap_or_default();
-
-    let result = result.unwrap();
-    execute!(stdout, RestorePosition, SetForegroundColor(Color::DarkCyan), Print(&result), Print('\n'), ResetColor).unwrap_or_default();
-    result
+    ask_for_input_impl(label, validation, false).unwrap()
 }
 
 pub fn confirmation(label: &str, default_positive: bool) -> bool {
@@ -152,6 +114,23 @@ pub fn confirmation(label: &str, default_positive: bool) -> bool {
         false
     } else {
         true
+    }
+}
+
+pub fn populate_new_portfolio(portfolio: &mut super::portfolio::Portfolio) {
+    let mut stdout = std::io::stdout();
+
+    draw_promt(&mut stdout, "Create categories in your new portfolio");
+    execute!(stdout, SetForegroundColor(Color::Cyan), Print(" [press Esc to finish]\n"), ResetColor).unwrap_or_default();
+
+    loop {
+        let category = ask_for_input_impl("Category name", |s| Ok(String::from(s)), true);
+        if category.is_err() { break; }
+
+        let amount = ask_for_input_impl("Amount", super::add_interactively::validate_amount, true);
+        if amount.is_err() { break; }
+
+        portfolio.add_category(category.unwrap(), amount.unwrap());
     }
 }
 
@@ -188,4 +167,52 @@ fn draw_promt(stdout: &mut Stdout, label: &str) {
     queue!(stdout, SetAttribute(Attribute::Bold), Print(format!("{}: ", label)), SetAttribute(Attribute::Reset)).unwrap();
 
     stdout.flush().unwrap();
+}
+
+fn ask_for_input_impl<F, T>(label: &str, validation: F, esc_interrupts: bool) -> Result<T, String>
+    where F : Fn(&String) -> Result<T, String>,
+          T : Display
+{
+    let mut stdout = std::io::stdout();
+
+    draw_promt(&mut stdout, label);
+    execute!(stdout, SavePosition).unwrap_or_default();
+
+    enable_raw_mode().unwrap_or_default();
+
+    let mut input = String::new();
+    let mut result = validation(&input);
+    loop {
+        match read().unwrap() {
+            Event::Key(k) => match k.code {
+                KeyCode::Char(c) => {
+                    input.push(c);
+                    result = validation(&input);
+                    execute!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), Print(&input)).unwrap_or_default();
+                },
+                KeyCode::Backspace => {
+                    input.pop();
+                    result = validation(&input);
+                    execute!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), Print(&input)).unwrap_or_default();
+                },
+                KeyCode::Enter => {
+                    match result.as_ref() {
+                        Ok(_) => break,
+                        Err(e) => execute!(stdout, Print(" "), SetForegroundColor(Color::Red), Print(format!("[{}]", e)), ResetColor).unwrap_or_default(),
+                    }
+                },
+                KeyCode::Esc => if esc_interrupts { result = Err(String::new()); break; },
+                _ => (),
+            },
+            _ => (),
+        }
+    }
+
+    disable_raw_mode().unwrap_or_default();
+
+    if let Ok(r) = result.as_ref() {
+        execute!(stdout, RestorePosition, SetForegroundColor(Color::DarkCyan), Print(r), Print('\n'), ResetColor).unwrap_or_default();
+    }
+
+    result
 }
