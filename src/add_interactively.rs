@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::io::{BufRead, Write};
 
 use super::csv;
 use super::portfolio::Portfolio;
@@ -75,24 +74,11 @@ fn read_portfolio (path: &PathBuf) -> Result<Portfolio, String> {
 fn create_new_portfolio(path: PathBuf) {
     let portfolio_name = path.file_stem().unwrap();
     let confirmation_label = format!("Portfolio {} doesn't exist yet. Create?", portfolio_name.to_string_lossy());
-    if !interaction::confirmation(&confirmation_label) { 
+    if !interaction::confirmation(&confirmation_label, true) { 
         return;
     }
 
     let mut portfolio = Portfolio::new();
-    let stdin = std::io::stdin();
-    let mut lines = stdin.lock().lines();
-    while let Some(line) = lines.next() {
-        let line = line.unwrap();
-        let mut words = line.split(" ");
-        let category = words.next();
-        if category.is_none() { continue; }
-
-        let value = words.next().unwrap_or("0").parse::<f32>().unwrap_or(0.0);
-        portfolio.add_category(category.unwrap().to_string(), value);
-    }
-
-    println!("Your new portfolio:\n{}", portfolio);
     
     if let Err(s) = csv::save_portfolio(&path, portfolio) {
         eprintln!("{}", s);
@@ -105,32 +91,12 @@ fn update_categories(portfolio: &mut Portfolio) {
         let error_msg = "Amount must be a positive floating point number";
         s.trim()
             .parse::<f32>()
-            .map_err(|e| String::from(error_msg))
+            .map_err(|_| String::from(error_msg))
             .and_then(|f| if f >= 0.0 { Ok(f) } else { Err(String::from(error_msg)) })
     }
 
     for (category, current_amount) in portfolio.data_mut() {
         **current_amount = interaction::ask_for_input(&format!("Amount for {}", category), validate_input);
-
-        /*loop {
-            print!("Amount for {}: ", category);
-            std::io::stdout().flush().unwrap();
-            let mut amount = String::new();
-            std::io::stdin().read_line(&mut amount).unwrap();
-
-            let amount = amount.trim()
-                .parse::<f32>()
-                .map_err(|_| String::from(error_msg))
-                .and_then(|f| if f >= 0.0 { Ok(f) } else { Err(String::from(error_msg)) });
-
-            match amount {
-                Ok(f) => { **current_amount = f; break },
-                Err(e) => {
-                    eprintln!("{}", e);
-                    eprintln!("Sorry, try again");
-                }
-            }
-        }*/
     }
 
 }

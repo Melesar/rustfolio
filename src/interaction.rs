@@ -135,8 +135,24 @@ pub fn ask_for_input<F, T>(label: &str, validation: F) -> T
     result
 }
 
-pub fn confirmation(label: &str) -> bool {
-    false
+pub fn confirmation(label: &str, default_positive: bool) -> bool {
+    let mut stdout = std::io::stdout();
+    
+    draw_promt(&mut stdout, &format!("{} [{yes}/{no}]", label, 
+                                     yes = if default_positive { 'Y' } else { 'y' },
+                                     no = if !default_positive { 'N' } else { 'n' } ));
+
+    let stdin = std::io::stdin();
+    let mut input = String::new();
+    stdin.read_line(&mut input).unwrap_or_default();
+
+    if default_positive && input.eq("n") {
+        false
+    } else if !default_positive && input.eq("y") {
+        false
+    } else {
+        true
+    }
 }
 
 fn apply_filter<'a>(filter: &str, all_options: &'a[String]) -> Vec<(usize, &'a String)> {
