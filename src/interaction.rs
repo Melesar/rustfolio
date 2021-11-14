@@ -23,10 +23,7 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T>
     let mut current_options : Vec<(usize, &String)> = transformed_options.iter().enumerate().collect();
     let mut current_selection = None;
 
-    queue!(stdout, SetAttribute(Attribute::Bold), SetForegroundColor(Color::Green), Print("? ".to_string()), ResetColor).unwrap();
-    queue!(stdout, SetAttribute(Attribute::Bold), Print(format!("{}: ", label)), SetAttribute(Attribute::Reset)).unwrap();
-
-    stdout.flush().unwrap();
+    draw_promt(&mut stdout, label);
 
     let initial_cursor_position = cursor::position().unwrap_or_default();
     let options_to_draw = std::cmp::min(MAX_VISIBLE_OPTIONS, transformed_options.len());
@@ -93,8 +90,49 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T>
     Some(all_options.remove(selected_option))
 }
 
-pub fn ask_for_input(label: &str) -> String {
-    String::new()
+pub fn ask_for_input<F, T>(label: &str, validation: F) -> T 
+    where F : Fn(&String) -> Result<T, String>,
+          T : Display
+{
+    let mut stdout = std::io::stdout();
+
+    draw_promt(&mut stdout, label);
+    execute!(stdout, SavePosition).unwrap_or_default();
+
+    enable_raw_mode().unwrap_or_default();
+
+    let mut input = String::new();
+    let mut result = validation(&input);
+    loop {
+        match read().unwrap() {
+            Event::Key(k) => match k.code {
+                KeyCode::Char(c) => {
+                    input.push(c);
+                    result = validation(&input);
+                    execute!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), Print(&input)).unwrap_or_default();
+                },
+                KeyCode::Backspace => {
+                    input.pop();
+                    result = validation(&input);
+                    execute!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), Print(&input)).unwrap_or_default();
+                },
+                KeyCode::Enter => {
+                    match result.as_ref() {
+                        Ok(_) => break,
+                        Err(e) => execute!(stdout, Print(" "), SetForegroundColor(Color::Red), Print(format!("[{}]", e)), ResetColor).unwrap_or_default(),
+                    }
+                }
+                _ => (),
+            },
+            _ => (),
+        }
+    }
+
+    disable_raw_mode().unwrap_or_default();
+
+    let result = result.unwrap();
+    execute!(stdout, RestorePosition, SetForegroundColor(Color::DarkCyan), Print(&result), Print('\n'), ResetColor).unwrap_or_default();
+    result
 }
 
 pub fn confirmation(label: &str) -> bool {
@@ -126,4 +164,12 @@ fn draw_options<U: Display>(stdout: &mut Stdout, selection: &Option<usize>, curr
     queue!(stdout, RestorePosition).unwrap_or_default();
 
     stdout.flush().unwrap_or_default();
+}
+
+fn draw_promt(stdout: &mut Stdout, label: &str) {
+
+    queue!(stdout, SetAttribute(Attribute::Bold), SetForegroundColor(Color::Green), Print("? ".to_string()), ResetColor).unwrap();
+    queue!(stdout, SetAttribute(Attribute::Bold), Print(format!("{}: ", label)), SetAttribute(Attribute::Reset)).unwrap();
+
+    stdout.flush().unwrap();
 }
