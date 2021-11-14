@@ -120,8 +120,9 @@ pub fn confirmation(label: &str, default_positive: bool) -> bool {
 pub fn populate_new_portfolio(portfolio: &mut super::portfolio::Portfolio) {
     let mut stdout = std::io::stdout();
 
-    draw_promt(&mut stdout, "Create categories in your new portfolio");
-    execute!(stdout, SetForegroundColor(Color::Cyan), Print(" [press Esc to finish]\n"), ResetColor).unwrap_or_default();
+    queue!(stdout, SetAttribute(Attribute::Bold), Print("Create categories for your new portfolio"), SetAttribute(Attribute::Reset)).unwrap();
+    queue!(stdout, SetForegroundColor(Color::Cyan), Print(" [press Esc to finish]\n"), ResetColor).unwrap_or_default();
+    stdout.flush().unwrap();
 
     loop {
         let category = ask_for_input_impl("Category name", |s| Ok(String::from(s)), true);
