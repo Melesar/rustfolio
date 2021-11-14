@@ -50,7 +50,12 @@ fn select_portfolio_file() -> Option<PathBuf> {
 }
 
 fn ask_for_new_file() -> Result<PathBuf, String> {
-    let portfolio_name = interaction::ask_for_input("Your portfolio name");
+
+    fn validation(s: &String) -> Result<String, String> {
+        Ok(String::from(s))
+    }
+
+    let portfolio_name = interaction::ask_for_input("Your portfolio name", validation);
     let temp_path = std::path::PathBuf::from(portfolio_name.trim());
     match temp_path.file_stem() {
         Some(stem) => {
@@ -95,14 +100,24 @@ fn create_new_portfolio(path: PathBuf) {
 }
 
 fn update_categories(portfolio: &mut Portfolio) {
+
+    fn validate_input(s: &String) -> Result<f32, String> {
+        let error_msg = "Amount must be a positive floating point number";
+        s.trim()
+            .parse::<f32>()
+            .map_err(|e| String::from(error_msg))
+            .and_then(|f| if f >= 0.0 { Ok(f) } else { Err(String::from(error_msg)) })
+    }
+
     for (category, current_amount) in portfolio.data_mut() {
-        loop {
+        **current_amount = interaction::ask_for_input(&format!("Amount for {}", category), validate_input);
+
+        /*loop {
             print!("Amount for {}: ", category);
             std::io::stdout().flush().unwrap();
             let mut amount = String::new();
             std::io::stdin().read_line(&mut amount).unwrap();
 
-            let error_msg = "Amount must be a positive floating point number";
             let amount = amount.trim()
                 .parse::<f32>()
                 .map_err(|_| String::from(error_msg))
@@ -115,7 +130,7 @@ fn update_categories(portfolio: &mut Portfolio) {
                     eprintln!("Sorry, try again");
                 }
             }
-        }
+        }*/
     }
 
 }
