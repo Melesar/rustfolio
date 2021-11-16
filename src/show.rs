@@ -1,14 +1,19 @@
 use piechart::*;
 use super::portfolio::Portfolio;
 
+const COLORS : [u8; 8] = [ 213, 226, 160, 134, 123, 172, 231, 207 ];
+const SYMBOLS : [char; 8] = ['▪', '•', '▴', '*', '♠', '⚬', '‣', '♥'];
+
 pub fn show_portfolio(portfolio: &Portfolio) {
     let data = portfolio.data()
-        .map(|c| Data { label: c.0.to_string(), value: c.1.0, color: None, fill: '*' })
+        .zip(COLORS.iter())
+        .zip(SYMBOLS.iter())
+        .map(|(((category, amount), color), symbol)| Data { label: category.to_string(), value: **amount, color: Some(Color::Fixed(*color)), fill: *symbol })
         .collect::<Vec<Data>>();
 
     Chart::new()
         .radius(9)
-        .aspect_ratio(3)
+        .aspect_ratio(4)
         .legend(true)
         .draw(&data);
 }
