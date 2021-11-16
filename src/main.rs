@@ -30,15 +30,24 @@ fn main() {
 
     let file_name : Option<String> = description.optional_value_of("file").unwrap_or(None);
 
-    //TODO handle non-tty stdin
-    let result = if description.value_of("add").unwrap() {
-        add_interactively::add(file_name
+    let file_path = file_name
             .and_then(|f| files::get_full_path(f).map_or_else(
                 |e| { eprintln!("Failed to handle file name: {}", e); None},
-                |mut f| { f.set_extension("csv"); Some(f) }))
-        )
+                |mut f| { f.set_extension("csv"); Some(f) }));
+
+    //TODO handle non-tty stdin
+    let result = if description.value_of("add").unwrap() {
+        add_interactively::add(file_path)
     } else {
-        Ok(())
+        let r = portfolio::get_portfolio_interactively(file_path);
+        r.and_then(|(p, _)| { 
+            if let Some(portfolio) = p {
+                show::show_portfolio(&portfolio);
+                Ok(()) 
+            } else {
+                Err(String::from("Failed to open portfolio"))
+            }
+        })
     };
 
     match result {
