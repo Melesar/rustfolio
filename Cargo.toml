@@ -11,7 +11,7 @@ readme = "README.md"
 edition = "2021"
 
 [dependencies]
-piechart = { git = "https://github.com/Melesar/piechart" }
+piechart = { git = "https://github.com/Melesar/piechart", version = "1.0.0" }
 xdg = "2.0"
 args = "2.0"
 getopts = "0.2.21"

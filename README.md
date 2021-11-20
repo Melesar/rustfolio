@@ -2,6 +2,8 @@
 
 Rustfolio is a program for monitoring your investment portfolio. It's main purpose is to show a summary of all your assets and their share in the entire portfolio. The portfolio data is stored in a `.csv` file, so it can be imported into any spreadsheet processor like Libre Office Calc or Microsoft Exel for more complicated processing and analisys.
 
+![Showcase](screenshots/showcase.png)
+
 ## Example usage
 
 ### Show the portfolio "MyPortfolio"
