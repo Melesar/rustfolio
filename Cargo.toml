@@ -2,7 +2,7 @@
 name = "rustfolio"
 version = "0.1.0"
 authors = ["Sergey Pikhota <sergey@pikhota.com>"]
-despritption = "A simple tool for monitoring an investment portfolio"
+description = "A simple tool for monitoring an investment portfolio"
 repository = "https://github.com/Melesar/rustfolio"
 keywords = ["portfolio"]
 categories = ["command-line-utilities", "visualization"]
