@@ -8,7 +8,7 @@ pub fn show_portfolio(portfolio: &Portfolio) {
     let data = portfolio.data()
         .zip(COLORS.iter())
         .zip(SYMBOLS.iter())
-        .map(|(((category, amount), color), symbol)| Data { label: category.to_string(), value: **amount, color: Some(Color::Fixed(*color)), fill: *symbol })
+        .map(|(((category, amount), color), symbol)| Data { label: category.to_string(), value: **amount, color: Some(Style::new().fg(Color::Fixed(*color))), fill: *symbol })
         .collect::<Vec<Data>>();
 
     Chart::new()

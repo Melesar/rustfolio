@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-piechart = "0.1.2"
+piechart = { git = "https://github.com/Melesar/piechart" }
 xdg = "2.0"
 args = "2.0"
 getopts = "0.2.21"
