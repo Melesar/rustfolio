@@ -111,9 +111,10 @@ pub fn confirmation(label: &str, default_positive: bool) -> bool {
     let mut input = String::new();
     stdin.read_line(&mut input).unwrap_or_default();
 
+    let input = input.trim();
     if default_positive && input.eq("n") {
         false
-    } else if !default_positive && input.eq("y") {
+    } else if !default_positive && !input.eq("y") {
         false
     } else {
         true
