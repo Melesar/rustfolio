@@ -208,6 +208,7 @@ fn ask_for_input_impl<F, T>(label: &str, validation: F, esc_interrupts: bool) ->
                 KeyCode::Enter => {
                     match result.as_ref() {
                         Ok(_) => break,
+                        //TODO fix displaying this error
                         Err(e) => execute!(stdout, Print(" "), SetForegroundColor(Color::Red), Print(format!("[{}]", e)), ResetColor).unwrap_or_default(),
                     }
                 },
