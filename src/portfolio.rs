@@ -1,47 +1,42 @@
-use std::collections::HashMap;
 use std::path::PathBuf;
+use std::collections::BTreeMap;
+
+use chrono::{DateTime, Local};
 
 use super::{csv, interaction};
 use super::currency::Currency;
 
 pub struct Portfolio {
-    data: HashMap<String, Currency>,
+    categories: Vec<String>,
+    data: BTreeMap<DateTime<Local>, Vec<Currency>>,
 }
 
 impl<'a> Portfolio {
     pub fn new() -> Self {
-        Portfolio { data: HashMap::new() }
+        Portfolio { categories: vec![], data: BTreeMap::default() }
     }
 
-    pub fn data_mut (&'a mut self) -> impl Iterator<Item=(&'a String, &'a mut Currency)> {
-        self.data.iter_mut()
+    pub fn data(&'a self) -> Option<impl Iterator<Item=(&'a String, &'a Currency)>> {
+        let categories_iter = self.categories.iter();
+        let data_entry = self.data.iter().rev().next();
+
+        data_entry.and_then(|e| Some(categories_iter.zip(e.1.iter())))
     }
 
-    pub fn data(&'a self) -> impl Iterator<Item=(&'a String, &'a Currency)> {
+    pub fn categories(&'a self) -> impl Iterator<Item=&'a str> {
+        self.categories.iter().map(|s| s.as_str())
+    }
+
+    pub fn values(&self) -> impl Iterator<Item=(&DateTime<Local>, &Vec<Currency>)> {
         self.data.iter()
     }
 
-    pub fn categories(&'a self) -> impl Iterator<Item=&'a String> {
-        self.data.keys()
+    pub fn set_data_for_date<T: Into<Vec<Currency>>>(&mut self, date: DateTime<Local>, data: T) {
+        self.data.insert(date, data.into());
     }
 
-    pub fn values(&self) -> impl Iterator<Item=&Currency> {
-        self.data.values()
-    }
-
-    pub fn add_category(&mut self, category: String, initial_value: f32) {
-        self.data.insert(category, Currency(initial_value));
-    }
-}
-
-impl std::fmt::Display for Portfolio {
-
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        for (category, value) in self.data.iter() {
-            write!(f, "{} - {}\n", category, value)?;
-        }
-
-        Ok(())
+    pub fn add_category(&mut self, category: String) {
+        self.categories.push(category);
     }
 }
 

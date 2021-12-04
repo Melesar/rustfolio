@@ -1,5 +1,6 @@
 use std::io::{Write, Stdout};
 use std::fmt::Display;
+use chrono::Local;
 
 const MAX_VISIBLE_OPTIONS : usize  = 5; 
 
@@ -10,6 +11,8 @@ use crossterm::{
     event::{read, Event, KeyCode},
     queue, execute
 };
+
+use crate::currency::Currency;
 
 pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T> 
     where I : Iterator<Item=T>,
@@ -124,6 +127,8 @@ pub fn populate_new_portfolio(portfolio: &mut super::portfolio::Portfolio) {
     queue!(stdout, SetForegroundColor(Color::Cyan), Print(" [press Esc to finish]\n"), ResetColor).unwrap_or_default();
     stdout.flush().unwrap();
 
+    let date = Local::now();
+    let mut data = vec![];
     loop {
         let category = ask_for_input_impl("Category name", |s| Ok(String::from(s)), true);
         if category.is_err() { break; }
@@ -131,8 +136,11 @@ pub fn populate_new_portfolio(portfolio: &mut super::portfolio::Portfolio) {
         let amount = ask_for_input_impl("Amount", super::add_interactively::validate_amount, true);
         if amount.is_err() { break; }
 
-        portfolio.add_category(category.unwrap(), amount.unwrap());
+        portfolio.add_category(category.unwrap());
+        data.push(Currency(amount.unwrap()));
     }
+
+    portfolio.set_data_for_date(date, data);
 }
 
 fn apply_filter<'a>(filter: &str, all_options: &'a[String]) -> Vec<(usize, &'a String)> {

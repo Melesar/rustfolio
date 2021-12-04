@@ -1,4 +1,7 @@
 use std::path::PathBuf;
+use chrono::Local;
+
+use crate::currency::Currency;
 
 use super::csv;
 use super::portfolio::{self, Portfolio};
@@ -31,9 +34,13 @@ fn create_new_portfolio(path: PathBuf) {
 }
 
 fn update_categories(portfolio: &mut Portfolio) {
-    for (category, current_amount) in portfolio.data_mut() {
-        **current_amount = interaction::ask_for_input(&format!("Amount for {}", category), validate_amount);
-    }
+    let date = Local::now();
+    let data = portfolio.categories()
+        .map(|category| interaction::ask_for_input(&format!("Amount for {}", category), validate_amount))
+        .map(|amount| Currency(amount))
+        .collect::<Vec<Currency>>();
+
+    portfolio.set_data_for_date(date, data);
 }
 
 
