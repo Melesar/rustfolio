@@ -15,5 +15,6 @@ pub fn show_portfolio(portfolio: &Portfolio) {
         .radius(9)
         .aspect_ratio(4)
         .legend(true)
+        .total(true)
         .draw(&data);
 }

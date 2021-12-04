@@ -242,7 +242,7 @@ dependencies = [
 [[package]]
 name = "piechart"
 version = "1.0.0"
-source = "git+https://github.com/Melesar/piechart#4a35944581d2039fe563ee33d47c050f33970dfd"
+source = "git+https://github.com/Melesar/piechart?branch=total_value#fd0db18a0f7ca9da97e63b149c185a3a39ee7e64"
 dependencies = [
  "ansi_term",
 ]
