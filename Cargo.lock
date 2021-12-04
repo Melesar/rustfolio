@@ -280,7 +280,7 @@ dependencies = [
 [[package]]
 name = "piechart"
 version = "1.0.0"
-source = "git+https://github.com/Melesar/piechart?branch=total_value#fd0db18a0f7ca9da97e63b149c185a3a39ee7e64"
+source = "git+https://github.com/jakobhellermann/piechart#fadcf8b94e41f8f2451750b26e34f1d0233eeeee"
 dependencies = [
  "ansi_term",
 ]

@@ -40,12 +40,12 @@ fn main() {
         add_interactively::add(file_path)
     } else {
         let r = portfolio::get_portfolio_interactively(file_path);
-        r.and_then(|(p, _)| { 
+        r.and_then(|p| { 
             if let Some(portfolio) = p {
                 show::show_portfolio(&portfolio);
                 Ok(()) 
             } else {
-                Err(String::from("Failed to open portfolio"))
+                Err(String::from("No portfolios exist so far. Try running rustfolio with -u flag to create one"))
             }
         })
     };

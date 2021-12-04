@@ -8,7 +8,7 @@ use super::portfolio::{self, Portfolio};
 use super::interaction;
 
 pub fn add (file_name: Option<PathBuf>) -> Result<(), String> {
-    let (portfolio, path) = portfolio::get_portfolio_interactively(file_name)?;
+    let (portfolio, path) = portfolio::get_or_create_portfolio_interactively(file_name)?;
     if let Some(mut p) = portfolio {
         update_categories(&mut p);
         csv::save_portfolio(&path, p)?;

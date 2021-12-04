@@ -14,7 +14,7 @@ use crossterm::{
 
 use crate::currency::Currency;
 
-pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T> 
+pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
     where I : Iterator<Item=T>,
           F : FnMut(&T) -> String,
 {
@@ -90,7 +90,7 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> Option<T>
 
     disable_raw_mode().unwrap_or_default();
 
-    Some(all_options.remove(selected_option))
+    all_options.remove(selected_option)
 }
 
 pub fn ask_for_input<F, T>(label: &str, validation: F) -> T 

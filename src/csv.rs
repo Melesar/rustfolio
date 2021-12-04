@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use chrono::{Local, DateTime, SecondsFormat};
+use csv::ErrorKind;
 
 use crate::currency::Currency;
 
@@ -7,7 +8,12 @@ use super::portfolio::Portfolio;
 
 pub fn read_portfolio(path: &PathBuf) -> Result<Portfolio, String> {
     let mut portfolio = Portfolio::new();
-    let mut reader = csv::Reader::from_path(path).map_err(|e| e.to_string())?;
+    let mut reader = csv::Reader::from_path(path).map_err(|e| {
+        match e.kind() {
+            ErrorKind::Io(_) => format!("Failed to open file {}. Make sure it exists and you have permission for it", path.to_string_lossy()),
+            _ => String::from("Failed to open portfolio file as .csv. Please make sure it's valid")
+        }
+    })?;
 
     let headers = reader.headers()
         .map_err(|_| String::from("Failed to read portfolio file. Headers weren't found"))?

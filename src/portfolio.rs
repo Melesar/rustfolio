@@ -40,7 +40,22 @@ impl<'a> Portfolio {
     }
 }
 
-pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Option<Portfolio>, PathBuf), String> {
+pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<Option<Portfolio>, String> {
+    match file_name {
+        Some(name) => Ok(Some(csv::read_portfolio(&name)?)),
+        None => {
+            let name = select_portfolio_file();
+            if let Some(name) = name {
+                let p = Some(csv::read_portfolio(&name)?);
+                Ok(p)
+            } else {
+                Ok(None)
+            }
+        },
+    }
+}
+
+pub fn get_or_create_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Option<Portfolio>, PathBuf), String> {
     match file_name {
         Some(name) => 
             if name.exists() {
@@ -72,7 +87,7 @@ fn select_portfolio_file() -> Option<PathBuf> {
         return Some(files.remove(0));
     }
 
-    interaction::select_one("Select portfolio", files.into_iter(), |f| f.file_stem().map_or(String::new(), |stem| stem.to_string_lossy().to_string()))
+    Some(interaction::select_one("Select portfolio", files.into_iter(), |f| f.file_stem().map_or(String::new(), |stem| stem.to_string_lossy().to_string())))
 }
 
 fn ask_for_new_file() -> Result<PathBuf, String> {
