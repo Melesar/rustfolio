@@ -208,8 +208,7 @@ fn ask_for_input_impl<F, T>(label: &str, validation: F, esc_interrupts: bool) ->
                 KeyCode::Enter => {
                     match result.as_ref() {
                         Ok(_) => break,
-                        //TODO fix displaying this error
-                        Err(e) => execute!(stdout, Print(" "), SetForegroundColor(Color::Red), Print(format!("[{}]", e)), ResetColor).unwrap_or_default(),
+                        Err(e) => { input.clear(); display_error(&mut stdout, e) }
                     }
                 },
                 KeyCode::Esc => if esc_interrupts { result = Err(String::new()); break; },
@@ -226,4 +225,12 @@ fn ask_for_input_impl<F, T>(label: &str, validation: F, esc_interrupts: bool) ->
     }
 
     result
+}
+
+fn display_error(stdout: &mut Stdout, error_msg: &str) {
+    queue!(stdout, RestorePosition, Clear(ClearType::UntilNewLine)).unwrap_or_default();
+    queue!(stdout, Print(" "), SetForegroundColor(Color::Red), Print(format!("[{}]", error_msg)), ResetColor).unwrap_or_default();
+    queue!(stdout, RestorePosition).unwrap_or_default();
+
+    stdout.flush().unwrap_or_default();
 }
