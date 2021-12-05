@@ -44,7 +44,7 @@ fn main() {
             if let Some(portfolio) = p {
                 show::show_portfolio(&portfolio)
             } else {
-                Err(String::from("No portfolios exist so far. Try running rustfolio with -u flag to create one"))
+                Err(String::from("No portfolios exist so far. Try running rustfolio with -a or --add flag to create one"))
             }
         })
     };
