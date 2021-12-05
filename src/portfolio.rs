@@ -106,7 +106,8 @@ fn ask_for_new_file() -> Result<PathBuf, String> {
         Ok(String::from(s))
     }
 
-    let portfolio_name = interaction::ask_for_input("Your portfolio name", validation, None);
+    let input = interaction::Input::new("Your portfolio name", validation);
+    let portfolio_name = input.ask_for_input().unwrap_or(String::new());
     let temp_path = std::path::PathBuf::from(portfolio_name.trim());
     match temp_path.file_stem() {
         Some(stem) => {

@@ -38,7 +38,8 @@ fn update_categories(portfolio: &mut Portfolio) {
     let data = portfolio.categories()
         .map(|category| {
             let default_value = portfolio.get_latest_value(category);
-            interaction::ask_for_input(&format!("Amount for {}", category), validate_amount, default_value.map(|c| c.0)) 
+            let input = interaction::Input::new(format!("Amount for {}", category), validate_amount).default_value(default_value.map(|c| c.0));
+            input.ask_for_input().unwrap()
         })
         .map(|amount| Currency(amount))
         .collect::<Vec<Currency>>();
