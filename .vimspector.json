@@ -1,0 +1,18 @@
+{
+  "configurations": {
+    "show": {
+      "adapter": "CodeLLDB",
+      "configuration": {
+        "request": "launch",
+        "program": "${workspaceRoot}/target/debug/rustfolio"
+      }
+    },
+	"test": {
+      "adapter": "CodeLLDB",
+      "configuration": {
+        "request": "launch",
+        "program": ["cargo", "test"]
+      }
+	}
+  }
+}

@@ -3,7 +3,7 @@ use std::{
     io::{Write, Stdout}
 };
 
-use super::{MAX_VISIBLE_OPTIONS, draw_promt};
+use super::draw_promt;
 
 use crossterm::{
     cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveTo, MoveToPreviousLine, MoveRight},
@@ -12,6 +12,8 @@ use crossterm::{
     event::{read, Event, KeyCode},
     queue, execute
 };
+
+const MAX_VISIBLE_OPTIONS : usize  = 5; 
 
 pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
     where I : Iterator<Item=T>,
@@ -23,14 +25,15 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
     let mut transformed_options : Vec<String> = all_options.iter().map(tranform).collect();
     let mut current_filter = String::new();
     let mut current_options : Vec<(usize, &String)> = transformed_options.iter().enumerate().collect();
-    let mut current_selection = None;
+    let mut current_selection = Some(0_usize);
 
     draw_promt(&mut stdout, label, &None::<f32>);
 
     let initial_cursor_position = cursor::position().unwrap_or_default();
     let options_to_draw = std::cmp::min(MAX_VISIBLE_OPTIONS, transformed_options.len());
-    for option in transformed_options.iter().take(options_to_draw) {
-        print!("\n  {}", option);
+    for (idx, option) in transformed_options.iter().take(options_to_draw).enumerate() {
+        let prefix = current_selection.map_or(" ", |s| if s == idx { ">" } else { " " });
+        print!("\n{}{}", prefix, option);
     }
 
     execute!(stdout, MoveToPreviousLine(options_to_draw as u16), MoveRight(initial_cursor_position.0), SavePosition).unwrap_or_default();
@@ -48,20 +51,22 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
                     current_filter.push(c);
                     execute!(stdout, Print(c), SavePosition).unwrap();
                     current_options = apply_filter(&current_filter, &transformed_options);
+                    current_selection = update_selection(&current_options, current_selection);
                     draw_options(&mut stdout, &current_selection, &current_options);
                 },
                 KeyCode::Backspace => {
                     current_filter.pop();
                     execute!(stdout, move_to_start, Clear(ClearType::UntilNewLine), Print(&current_filter), SavePosition).unwrap();
                     current_options = apply_filter(&current_filter, &transformed_options);
+                    current_selection = update_selection(&current_options, current_selection);
                     draw_options(&mut stdout, &current_selection, &current_options);
                 },
                 KeyCode::Down => {
-                    current_selection = current_selection.map_or(Some(0_usize), |v| Some(std::cmp::min(v + 1, current_options.len() - 1)));
+                    current_selection = current_selection.and_then(|v| Some(std::cmp::min(v + 1, current_options.len() - 1)));
                     draw_options(&mut stdout, &current_selection, &current_options);
                 },
                 KeyCode::Up => {
-                    current_selection = current_selection.and_then(|v| if v == 0 { None } else { Some(std::cmp::max(v - 1, 0)) });
+                    current_selection = current_selection.and_then(|v| v.checked_sub(1).or(Some(0)));
                     draw_options(&mut stdout, &current_selection, &current_options);
                 },
                 KeyCode::Enter => {
@@ -116,5 +121,16 @@ fn draw_options<U: Display>(stdout: &mut Stdout, selection: &Option<usize>, curr
 }
 
 fn apply_filter<'a>(filter: &str, all_options: &'a[String]) -> Vec<(usize, &'a String)> {
-    all_options.iter().filter(|s| s.contains(filter)).enumerate().collect()
+    all_options.iter()
+        .enumerate()
+        .filter(|(_, s)| s.contains(filter))
+        .collect()
+}
+
+fn update_selection<U: Display>(current_options: &[(usize, &U)], current_selection: Option<usize>) -> Option<usize> {
+    if current_options.len() == 0 {
+        None
+    } else {
+        Some(current_selection.map_or(0, |selection| std::cmp::min(selection, current_options.len() - 1)))
+    }
 }

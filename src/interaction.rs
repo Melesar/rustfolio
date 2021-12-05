@@ -5,8 +5,6 @@ use std::io::{Write, Stdout};
 use std::fmt::Display;
 use chrono::Local;
 
-const MAX_VISIBLE_OPTIONS : usize  = 5; 
-
 use crossterm::{
     cursor::SavePosition,
     style::{SetAttribute, Attribute, SetForegroundColor, ResetColor, Color, Print},
