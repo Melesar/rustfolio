@@ -33,7 +33,7 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
     let options_to_draw = std::cmp::min(MAX_VISIBLE_OPTIONS, transformed_options.len());
     for (idx, option) in transformed_options.iter().take(options_to_draw).enumerate() {
         let prefix = current_selection.map_or(" ", |s| if s == idx { ">" } else { " " });
-        print!("\n{}{}", prefix, option);
+        print!("\n{} {}", prefix, option);
     }
 
     execute!(stdout, MoveToPreviousLine(options_to_draw as u16), MoveRight(initial_cursor_position.0), SavePosition).unwrap_or_default();
@@ -97,11 +97,16 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
     all_options.remove(selected_option)
 }
 
-//TODO handle large number of options
 fn draw_options<U: Display>(stdout: &mut Stdout, selection: &Option<usize>, current_options: &[(usize, &U)]) {
     queue!(stdout, RestorePosition, MoveToNextLine(1)).unwrap_or_default();
+    let mut start_from = selection.map_or(0, |s| s.checked_sub(MAX_VISIBLE_OPTIONS / 2).unwrap_or(0));
+    start_from = start_from.min(current_options.len().checked_sub(MAX_VISIBLE_OPTIONS).unwrap_or(0));
 
-    for (selection_index, (_, option)) in current_options.iter().enumerate() {
+    let iter = current_options.iter().enumerate()
+        .skip(start_from)
+        .take(MAX_VISIBLE_OPTIONS);
+
+    for (selection_index, (_, option)) in iter {
         let is_selected = selection.filter(|s| *s == selection_index).is_some();
         let prefix = if is_selected { "> " } else { "  " };
         queue!(stdout, Clear(ClearType::CurrentLine)).unwrap_or_default(); 
