@@ -42,8 +42,7 @@ fn main() {
         let r = portfolio::get_portfolio_interactively(file_path);
         r.and_then(|p| { 
             if let Some(portfolio) = p {
-                show::show_portfolio(&portfolio);
-                Ok(()) 
+                show::show_portfolio(&portfolio)
             } else {
                 Err(String::from("No portfolios exist so far. Try running rustfolio with -u flag to create one"))
             }

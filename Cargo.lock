@@ -280,7 +280,8 @@ dependencies = [
 [[package]]
 name = "piechart"
 version = "1.0.0"
-source = "git+https://github.com/jakobhellermann/piechart#fadcf8b94e41f8f2451750b26e34f1d0233eeeee"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79730372879e285c066c9289e164f4033ff665a866396dfa478f58f5adcd4089"
 dependencies = [
  "ansi_term",
 ]
