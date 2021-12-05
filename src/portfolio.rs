@@ -38,6 +38,16 @@ impl<'a> Portfolio {
     pub fn add_category(&mut self, category: String) {
         self.categories.push(category);
     }
+
+    pub fn get_latest_value(&self, category: &str) -> Option<Currency> {
+        self.data().and_then(|data| {
+            for (cat, curr) in data {
+                if cat.eq(category) { return Some(*curr); }
+            }
+
+            None
+        })
+    }
 }
 
 pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<Option<Portfolio>, String> {
@@ -96,7 +106,7 @@ fn ask_for_new_file() -> Result<PathBuf, String> {
         Ok(String::from(s))
     }
 
-    let portfolio_name = interaction::ask_for_input("Your portfolio name", validation);
+    let portfolio_name = interaction::ask_for_input("Your portfolio name", validation, None);
     let temp_path = std::path::PathBuf::from(portfolio_name.trim());
     match temp_path.file_stem() {
         Some(stem) => {

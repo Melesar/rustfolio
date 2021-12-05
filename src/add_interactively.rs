@@ -36,7 +36,10 @@ fn create_new_portfolio(path: PathBuf) {
 fn update_categories(portfolio: &mut Portfolio) {
     let date = Local::now();
     let data = portfolio.categories()
-        .map(|category| interaction::ask_for_input(&format!("Amount for {}", category), validate_amount))
+        .map(|category| {
+            let default_value = portfolio.get_latest_value(category);
+            interaction::ask_for_input(&format!("Amount for {}", category), validate_amount, default_value.map(|c| c.0)) 
+        })
         .map(|amount| Currency(amount))
         .collect::<Vec<Currency>>();
 

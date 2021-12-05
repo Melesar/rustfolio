@@ -26,7 +26,7 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
     let mut current_options : Vec<(usize, &String)> = transformed_options.iter().enumerate().collect();
     let mut current_selection = None;
 
-    draw_promt(&mut stdout, label);
+    draw_promt(&mut stdout, label, &None::<f32>);
 
     let initial_cursor_position = cursor::position().unwrap_or_default();
     let options_to_draw = std::cmp::min(MAX_VISIBLE_OPTIONS, transformed_options.len());
@@ -93,11 +93,11 @@ pub fn select_one<I, T, F>(label: &str, iter: I, tranform: F) -> T
     all_options.remove(selected_option)
 }
 
-pub fn ask_for_input<F, T>(label: &str, validation: F) -> T 
+pub fn ask_for_input<F, T>(label: &str, validation: F, default_value: Option<T>) -> T 
     where F : Fn(&String) -> Result<T, String>,
           T : Display
 {
-    ask_for_input_impl(label, validation, false).unwrap()
+    ask_for_input_impl(label, validation, default_value, false).unwrap()
 }
 
 pub fn confirmation(label: &str, default_positive: bool) -> bool {
@@ -105,7 +105,7 @@ pub fn confirmation(label: &str, default_positive: bool) -> bool {
     
     draw_promt(&mut stdout, &format!("{} [{yes}/{no}]", label, 
                                      yes = if default_positive { 'Y' } else { 'y' },
-                                     no = if !default_positive { 'N' } else { 'n' } ));
+                                     no = if !default_positive { 'N' } else { 'n' } ), &None::<f32>);
 
     let stdin = std::io::stdin();
     let mut input = String::new();
@@ -131,10 +131,10 @@ pub fn populate_new_portfolio(portfolio: &mut super::portfolio::Portfolio) {
     let date = Local::now();
     let mut data = vec![];
     loop {
-        let category = ask_for_input_impl("Category name", |s| Ok(String::from(s)), true);
+        let category = ask_for_input_impl("Category name", |s| Ok(String::from(s)), None, true);
         if category.is_err() { break; }
 
-        let amount = ask_for_input_impl("Amount", super::add_interactively::validate_amount, true);
+        let amount = ask_for_input_impl("Amount", super::add_interactively::validate_amount, None, true);
         if amount.is_err() { break; }
 
         portfolio.add_category(category.unwrap());
@@ -171,27 +171,30 @@ fn draw_options<U: Display>(stdout: &mut Stdout, selection: &Option<usize>, curr
     stdout.flush().unwrap_or_default();
 }
 
-fn draw_promt(stdout: &mut Stdout, label: &str) {
+fn draw_promt<T: Display>(stdout: &mut Stdout, label: &str, default_value: &Option<T>) {
 
     queue!(stdout, SetAttribute(Attribute::Bold), SetForegroundColor(Color::Green), Print("? ".to_string()), ResetColor).unwrap();
     queue!(stdout, SetAttribute(Attribute::Bold), Print(format!("{}: ", label)), SetAttribute(Attribute::Reset)).unwrap();
+    if let Some(default) = default_value {
+        queue!(stdout, SetForegroundColor(Color::DarkGrey), Print(format!("[{}] ", default)), ResetColor).unwrap_or_default();
+    }
 
     stdout.flush().unwrap();
 }
 
-fn ask_for_input_impl<F, T>(label: &str, validation: F, esc_interrupts: bool) -> Result<T, String>
+fn ask_for_input_impl<F, T>(label: &str, validation: F, default_value: Option<T>, esc_interrupts: bool) -> Result<T, String>
     where F : Fn(&String) -> Result<T, String>,
           T : Display
 {
     let mut stdout = std::io::stdout();
 
-    draw_promt(&mut stdout, label);
+    draw_promt(&mut stdout, label, &default_value);
     execute!(stdout, SavePosition).unwrap_or_default();
 
     enable_raw_mode().unwrap_or_default();
 
     let mut input = String::new();
-    let mut result = validation(&input);
+    let mut result = default_value.ok_or(String::new()).or(validation(&input));
     loop {
         match read().unwrap() {
             Event::Key(k) => match k.code {

@@ -23,3 +23,9 @@ impl Display for Currency {
         write!(f, "{}", self.0)
     }
 }
+
+impl From<Currency> for f32 {
+    fn from(c: Currency) -> Self {
+        c.0
+    }
+}
