@@ -24,14 +24,14 @@ pub fn show_portfolio(portfolio: &Portfolio) -> Result<(), String>{
             .draw_into(std::io::stdout(), &data)
             .map_err(|e| format!("Failed to draw piechart: {}", e));
 
-        if let Ok(_) = result {
+        if result.is_ok() {
             let mut stdout = std::io::stdout();
             let total_value = data.iter().map(|d| d.value).sum::<f32>();
             for _ in 0..(radius * aspect + 4) {
                 queue!(stdout, Print(" ")).unwrap_or_default();
             }
             queue!(stdout, SetAttribute(Attribute::Bold), Print("Total: "), SetAttribute(Attribute::Reset)).unwrap_or_default();
-            queue!(stdout, Print(total_value)).unwrap_or_default();
+            queue!(stdout, Print(total_value), Print("\n")).unwrap_or_default();
 
             stdout.flush().unwrap_or_default();
         }
