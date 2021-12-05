@@ -175,6 +175,7 @@ fn draw_promt<T: Display>(stdout: &mut Stdout, label: &str, default_value: &Opti
 
     queue!(stdout, SetAttribute(Attribute::Bold), SetForegroundColor(Color::Green), Print("? ".to_string()), ResetColor).unwrap();
     queue!(stdout, SetAttribute(Attribute::Bold), Print(format!("{}: ", label)), SetAttribute(Attribute::Reset)).unwrap();
+    queue!(stdout, SavePosition).unwrap_or_default();
     if let Some(default) = default_value {
         queue!(stdout, SetForegroundColor(Color::DarkGrey), Print(format!("[{}] ", default)), ResetColor).unwrap_or_default();
     }
@@ -189,7 +190,6 @@ fn ask_for_input_impl<F, T>(label: &str, validation: F, default_value: Option<T>
     let mut stdout = std::io::stdout();
 
     draw_promt(&mut stdout, label, &default_value);
-    execute!(stdout, SavePosition).unwrap_or_default();
 
     enable_raw_mode().unwrap_or_default();
 
@@ -224,7 +224,7 @@ fn ask_for_input_impl<F, T>(label: &str, validation: F, default_value: Option<T>
     disable_raw_mode().unwrap_or_default();
 
     if let Ok(r) = result.as_ref() {
-        execute!(stdout, RestorePosition, SetForegroundColor(Color::DarkCyan), Print(r), Print('\n'), ResetColor).unwrap_or_default();
+        execute!(stdout, RestorePosition, Clear(ClearType::UntilNewLine), SetForegroundColor(Color::DarkCyan), Print(r), Print('\n'), ResetColor).unwrap_or_default();
     }
 
     result
