@@ -14,7 +14,7 @@ use std::process::exit;
 fn main() {
     let mut description = Args::new("rustfolio", "Program for simple portfolio management");
     description.flag("h", "help", "Prints this message");
-    description.flag("u", "update", "Updates portfolio with a new entry");
+    description.flag("a", "add", "Adds a new entry to a portfolio");
     description.option("f", "file", "Portfolio file", "FILE", Occur::Optional, Some(String::new()));
 
     if let Err(e) = description.parse_from_cli() {
@@ -36,7 +36,7 @@ fn main() {
                 |mut f| { f.set_extension("csv"); Some(f) }));
 
     //TODO handle non-tty stdin
-    let result = if description.value_of("update").unwrap() {
+    let result = if description.value_of("add").unwrap() {
         add_interactively::add(file_path)
     } else {
         let r = portfolio::get_portfolio_interactively(file_path);
