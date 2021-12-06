@@ -14,12 +14,32 @@ rustfolio --file MyPortfolio
 
 `--file` flag can be omitted. In this case the program will promt to select the portfolio that exists.
 
+To see the entire history of the portfolio instead of the latest entry, add `--table` flag
+
+```sh
+rustfolio --file MyPortfolio --table
+```
+
 ### Modify a portfolio
 
 ```sh
-rustfolio --add --file MyPortfolio
+rustfolio add --file MyPortfolio
 ```
 
 The program will promt you to provide data for each asset category in the portfolio and will save it in the specified file. If `--file` is omitted, it will promt to select a portfolio. If none exists, it will promt to create a new one.
 
-Every time you `--add` to an existing portfolio, this data will be added to the portfolio .csv file with the current date and time. This way, you will have a history of your portfolio
+Every time you `add` to an existing portfolio, this data will be added to the portfolio .csv file with the current date and time. This way, you will have a history of your portfolio
+
+### List available portfolios
+
+```sh
+rustfolio list
+```
+
+### Export a portfolio as a .csv file
+
+```sh
+rustfolio export -o output.csv -p MyPortfolio
+```
+
+Flag `-p` can be omitted. In this case you will be promted to select one of the available portfolios
