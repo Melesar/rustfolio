@@ -5,6 +5,7 @@ use chrono::{DateTime, Local};
 
 use super::{csv, interaction};
 use super::currency::Currency;
+use super::files;
 
 pub struct Portfolio {
     categories: Vec<String>,
@@ -50,6 +51,27 @@ impl<'a> Portfolio {
     }
 }
 
+pub fn get_portfolio_contents(portfolio_name: String) -> Result<String, String> { 
+    let portfolio_path = files::list_data_files().into_iter()
+        .find(|f| files::as_file_stem(f).eq(&portfolio_name));
+
+    if let Some(path) = portfolio_path {
+        std::fs::read_to_string(path).map_err(|e| format!("Failed to read portfolio file: {}", e))
+    } else {
+        Err(format!("Portfolio {} wasn't found. Make sure you've spelled it correctly", portfolio_name))
+    }
+}
+
+pub fn get_portfolio_contents_interactively() -> Result<String, String> {
+    let portfolio_path = select_portfolio_file();
+
+    if let Some(path) = portfolio_path {
+        std::fs::read_to_string(path).map_err(|e| format!("Failed to read portfolio file: {}", e))
+    } else {
+        Err(String::from("Didn't find any portfolios"))
+    }
+}
+
 pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<Option<Portfolio>, String> {
     match file_name {
         Some(name) => Ok(Some(csv::read_portfolio(&name)?)),
@@ -86,7 +108,7 @@ pub fn get_or_create_portfolio_interactively(file_name: Option<PathBuf>) -> Resu
     }
 }
 
-fn select_portfolio_file() -> Option<PathBuf> {
+pub fn select_portfolio_file() -> Option<PathBuf> {
     let mut files = super::files::list_data_files();
     if files.is_empty() {
         return None;
@@ -97,10 +119,6 @@ fn select_portfolio_file() -> Option<PathBuf> {
     }
 
     Some(interaction::select_one("Select portfolio", files.into_iter(), |f| super::files::as_file_stem(f)))
-}
-
-pub fn list_portfolio_files() -> Vec<String> {
-    super::files::list_data_files().into_iter().map(|f| super::files::as_file_stem(&f)).collect()
 }
 
 fn ask_for_new_file() -> Result<PathBuf, String> {

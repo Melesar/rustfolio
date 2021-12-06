@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 use chrono::{Local, DateTime, SecondsFormat};
 use csv::ErrorKind;
 
@@ -6,7 +6,7 @@ use crate::currency::Currency;
 
 use super::portfolio::Portfolio;
 
-pub fn read_portfolio(path: &PathBuf) -> Result<Portfolio, String> {
+pub fn read_portfolio(path: &Path) -> Result<Portfolio, String> {
     let mut portfolio = Portfolio::new();
     let mut reader = csv::Reader::from_path(path).map_err(|e| {
         match e.kind() {
@@ -45,7 +45,7 @@ pub fn read_portfolio(path: &PathBuf) -> Result<Portfolio, String> {
     Ok(portfolio)
 }
 
-pub fn save_portfolio(path: &PathBuf, portfolio: Portfolio) -> Result<(), String> {
+pub fn save_portfolio(path: &Path, portfolio: Portfolio) -> Result<(), String> {
     let mut writer = csv::Writer::from_path(path).map_err(|e| e.to_string())?;
     let mut header = vec![""];
     header.extend(portfolio.categories());
