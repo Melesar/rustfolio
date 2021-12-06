@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use cli_table::{Table, Cell, print_stdout};
 use crossterm::{style::{SetAttribute, Attribute, Print}, queue};
 use piechart::*;
 use super::portfolio::Portfolio;
@@ -7,7 +8,7 @@ use super::portfolio::Portfolio;
 const COLORS : [u8; 8] = [ 213, 226, 160, 134, 123, 172, 231, 207 ];
 const SYMBOLS : [char; 8] = ['▪', '•', '▴', '*', '♠', '⚬', '‣', '♥'];
 
-pub fn show_portfolio(portfolio: &Portfolio) -> Result<(), String>{
+pub fn show_as_chart(portfolio: &Portfolio) -> Result<(), String>{
     if let Some(data_iter) = portfolio.data() {
         let data = data_iter
             .zip(COLORS.iter())
@@ -40,4 +41,17 @@ pub fn show_portfolio(portfolio: &Portfolio) -> Result<(), String>{
     } else {
         Err(String::from("No data was found in the current portfolio"))
     }
+}
+
+pub fn show_as_table(portfolio: &Portfolio) -> Result<(), String> {
+    let table = portfolio.values().map(|(date, values)| {
+        let mut cells = vec![date.date().format("%Y-%m-%d").cell()];
+        cells.extend(values.into_iter().map(|v| (*v).cell()));
+        cells.push(values.into_iter().map(|c| c.0).sum::<f32>().cell());
+        cells
+    })
+    .table()
+        .title(vec!["Date"].into_iter().chain(portfolio.categories()).chain(vec!["Total"]));
+
+    print_stdout(table).map_err(|_| String::from("Failed to draw table"))
 }

@@ -11,6 +11,9 @@ mod export;
 use std::path::PathBuf;
 use clap::{App, Arg, SubCommand, ArgMatches};
 
+#[derive(Debug)]
+enum DisplayStyle { Chart, Table }
+
 fn main() {
     let file_arg = Arg::with_name("file")
         .short("f")
@@ -25,6 +28,9 @@ fn main() {
         .author(clap::crate_authors!())
         .about(clap::crate_description!())
         .arg(file_arg.clone())
+        .arg(Arg::with_name("table")
+             .help("Display portfolio as a table instead of a chart")
+             .long("table"))
         .subcommand(SubCommand::with_name("add")
              .about("Adds a new entry to a portfolio")
              .arg(file_arg.clone()))
@@ -44,6 +50,7 @@ fn main() {
                          .required(true)))
         .get_matches();
 
+    let display_style = if app_config.is_present("table") { DisplayStyle::Table } else { DisplayStyle::Chart }; 
 
     //TODO handle non-tty stdin
     let result = if let Some(add_matches) = app_config.subcommand_matches("add") {
@@ -54,7 +61,7 @@ fn main() {
     } else if let Some(export_matches) = app_config.subcommand_matches("export") {
         export_portfolio(export_matches)
     } else {
-        show_portfolio(&app_config)
+        show_portfolio(&app_config, display_style)
     };
 
     match result {
@@ -69,16 +76,18 @@ fn export_portfolio(matches: &ArgMatches) -> Result<(), String> {
     export::export_interactively(portfolio_name, file_path)
 }
 
-fn show_portfolio(app_config: &ArgMatches) -> Result<(), String> {
+fn show_portfolio(app_config: &ArgMatches, style: DisplayStyle) -> Result<(), String> {
     let file_path = get_file_name(app_config);
-    let r = portfolio::get_portfolio_interactively(file_path);
-    r.and_then(|p| { 
-        if let Some(portfolio) = p {
-            show::show_portfolio(&portfolio)
-        } else {
-            Err(String::from("No portfolios exist so far. Try running rustfolio with -a or --add flag to create one"))
+    let r = portfolio::get_portfolio_interactively(file_path)?;
+
+    if let Some(portfolio) = r {
+        match style {
+            DisplayStyle::Chart => show::show_as_chart(&portfolio),
+            DisplayStyle::Table => show::show_as_table(&portfolio),
         }
-    })
+    } else {
+        Err(String::from("No portfolios exist so far. Try running rustfolio with -a or --add flag to create one"))
+    }
 }
 
 fn get_file_name(matches: &ArgMatches) -> Option<PathBuf> {
