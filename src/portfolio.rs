@@ -74,7 +74,13 @@ pub fn get_portfolio_contents_interactively() -> Result<String, String> {
 
 pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Portfolio, PathBuf), String> {
     match file_name {
-        Some(name) => Ok((csv::read_portfolio(&name)?, name)),
+        Some(name) => {
+            if !name.exists() {
+                return Err(format!("Portfolio {name} doesn't exist. Try running 'rustfolio new {name}' to create one", 
+                                        name = name.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or(String::new())))
+            }
+            Ok((csv::read_portfolio(&name)?, name))
+        },
         None => {
             let name = select_portfolio_file();
             if let Some(name) = name {
