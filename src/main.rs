@@ -6,29 +6,27 @@ mod add_interactively;
 mod show;
 mod files;
 
-use args::Args;
-use getopts::Occur;
-
-use std::process::exit;
+use clap::{App, Arg, SubCommand, crate_version, crate_name, crate_authors, crate_description};
 
 fn main() {
-    let mut description = Args::new("rustfolio", "Program for simple portfolio management");
-    description.flag("h", "help", "Prints this message");
-    description.flag("a", "add", "Adds a new entry to a portfolio");
-    description.option("f", "file", "Portfolio file", "FILE", Occur::Optional, Some(String::new()));
+    let app_config = App::new(crate_name!())
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
+        .arg(Arg::with_name("add")
+             .short("a")
+             .long("add")
+             .help("Adds a new entry to a portfolio"))
+        .arg(Arg::with_name("file")
+             .short("f")
+             .long("file")
+             .help("Portfolio file")
+             .value_name("FILE")
+             .takes_value(true)
+             .required(false))
+        .get_matches();
 
-    if let Err(e) = description.parse_from_cli() {
-        eprintln!("Failed to parse command line arguments");
-        eprintln!("{}", e);
-        exit(1);
-    }
-
-    if description.value_of("help").unwrap() {
-        println!("{}", description.full_usage());
-        return;
-    }
-
-    let file_name : Option<String> = description.optional_value_of("file").unwrap_or(None);
+    let file_name = app_config.value_of("file").map(|s| s.to_string());
 
     let file_path = file_name
             .and_then(|f| files::get_full_path(f).map_or_else(
@@ -36,7 +34,7 @@ fn main() {
                 |mut f| { f.set_extension("csv"); Some(f) }));
 
     //TODO handle non-tty stdin
-    let result = if description.value_of("add").unwrap() {
+    let result = if app_config.is_present("add") {
         add_interactively::add(file_path)
     } else {
         let r = portfolio::get_portfolio_interactively(file_path);
