@@ -88,7 +88,6 @@ pub fn get_or_create_portfolio_interactively(file_name: Option<PathBuf>) -> Resu
 
 fn select_portfolio_file() -> Option<PathBuf> {
     let mut files = super::files::list_data_files();
-    files.retain(|f| f.file_name().is_some());
     if files.is_empty() {
         return None;
     }
@@ -97,7 +96,11 @@ fn select_portfolio_file() -> Option<PathBuf> {
         return Some(files.remove(0));
     }
 
-    Some(interaction::select_one("Select portfolio", files.into_iter(), |f| f.file_stem().map_or(String::new(), |stem| stem.to_string_lossy().to_string())))
+    Some(interaction::select_one("Select portfolio", files.into_iter(), |f| super::files::as_file_stem(f)))
+}
+
+pub fn list_portfolio_files() -> Vec<String> {
+    super::files::list_data_files().into_iter().map(|f| super::files::as_file_stem(&f)).collect()
 }
 
 fn ask_for_new_file() -> Result<PathBuf, String> {

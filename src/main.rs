@@ -5,6 +5,7 @@ mod csv;
 mod add_interactively;
 mod show;
 mod files;
+mod list;
 
 use std::path::PathBuf;
 use clap::{App, Arg, SubCommand, ArgMatches};
@@ -26,6 +27,7 @@ fn main() {
         .subcommand(SubCommand::with_name("add")
              .about("Adds a new entry to a portfolio")
              .arg(file_arg.clone()))
+        .subcommand(SubCommand::with_name("list").about("Lists all available portfolios"))
         .get_matches();
 
 
@@ -33,6 +35,8 @@ fn main() {
     let result = if let Some(add_matches) = app_config.subcommand_matches("add") {
         let file_path = get_file_name(add_matches);
         add_interactively::add(file_path)
+    } else if app_config.subcommand_matches("list").is_some() {
+        list::list_portfolio_files()
     } else {
         let file_path = get_file_name(&app_config);
         let r = portfolio::get_portfolio_interactively(file_path);
