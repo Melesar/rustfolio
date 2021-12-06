@@ -31,12 +31,22 @@ fn main() {
         .arg(Arg::with_name("table")
              .help("Display portfolio as a table instead of a chart")
              .long("table"))
+        .subcommand(SubCommand::with_name("new")
+                    .about("Creates a new portfolio")
+                    .display_order(0)
+                    .arg(Arg::with_name("portfolio_name")
+                         .help("Name of the new portfolio")
+                         .value_name("NAME")))
         .subcommand(SubCommand::with_name("add")
-             .about("Adds a new entry to a portfolio")
-             .arg(file_arg.clone()))
-        .subcommand(SubCommand::with_name("list").about("Lists all available portfolios"))
+                    .about("Adds a new entry to a portfolio")
+                    .display_order(1)
+                    .arg(file_arg.clone()))
+        .subcommand(SubCommand::with_name("list")
+                    .about("Lists all available portfolios")
+                    .display_order(2))
         .subcommand(SubCommand::with_name("export")
                     .about("Exports a portfolio as a .csv file")
+                    .display_order(3)
                     .arg(Arg::with_name("portfolio_name")
                          .short("p")
                          .long("portfolio")
@@ -53,7 +63,9 @@ fn main() {
     let display_style = if app_config.is_present("table") { DisplayStyle::Table } else { DisplayStyle::Chart }; 
 
     //TODO handle non-tty stdin
-    let result = if let Some(add_matches) = app_config.subcommand_matches("add") {
+    let result = if let Some(new_matches) = app_config.subcommand_matches("new") {
+        create_new_portfolio(&new_matches)
+    } else if let Some(add_matches) = app_config.subcommand_matches("add") {
         let file_path = get_file_name(add_matches);
         add_interactively::add(file_path)
     } else if app_config.subcommand_matches("list").is_some() {
@@ -70,6 +82,12 @@ fn main() {
     };
 }
 
+fn create_new_portfolio(matches: &ArgMatches) -> Result<(), String> {
+    let portfolio_name = matches.value_of("portfolio_name");
+    let path = portfolio::get_portfolio_name_interactively(portfolio_name.map(|s| s.to_string()));
+    path.and_then(|p| portfolio::create_portfolio_interactively(p)).map(|_| ())
+}
+
 fn export_portfolio(matches: &ArgMatches) -> Result<(), String> {
     let portfolio_name = matches.value_of("portfolio_name").map(|s| s.to_string());
     let file_path = std::path::Path::new(matches.value_of("output_file").unwrap());
@@ -78,15 +96,10 @@ fn export_portfolio(matches: &ArgMatches) -> Result<(), String> {
 
 fn show_portfolio(app_config: &ArgMatches, style: DisplayStyle) -> Result<(), String> {
     let file_path = get_file_name(app_config);
-    let r = portfolio::get_portfolio_interactively(file_path)?;
-
-    if let Some(portfolio) = r {
-        match style {
-            DisplayStyle::Chart => show::show_as_chart(&portfolio),
-            DisplayStyle::Table => show::show_as_table(&portfolio),
-        }
-    } else {
-        Err(String::from("No portfolios exist so far. Try running rustfolio with -a or --add flag to create one"))
+    let (portfolio, _) = portfolio::get_portfolio_interactively(file_path)?;
+    match style {
+        DisplayStyle::Chart => show::show_as_chart(&portfolio),
+        DisplayStyle::Table => show::show_as_table(&portfolio),
     }
 }
 

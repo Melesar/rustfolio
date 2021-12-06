@@ -72,43 +72,54 @@ pub fn get_portfolio_contents_interactively() -> Result<String, String> {
     }
 }
 
-pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<Option<Portfolio>, String> {
+pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Portfolio, PathBuf), String> {
     match file_name {
-        Some(name) => Ok(Some(csv::read_portfolio(&name)?)),
+        Some(name) => Ok((csv::read_portfolio(&name)?, name)),
         None => {
             let name = select_portfolio_file();
             if let Some(name) = name {
-                let p = Some(csv::read_portfolio(&name)?);
-                Ok(p)
-            } else {
-                Ok(None)
-            }
-        },
-    }
-}
-
-pub fn get_or_create_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Option<Portfolio>, PathBuf), String> {
-    match file_name {
-        Some(name) => 
-            if name.exists() {
-                Ok((Some(csv::read_portfolio(&name)?), name))
-            } else {
-                Ok((None, name))
-            }
-        ,
-        None => {
-            let name = select_portfolio_file();
-            if let Some(name) = name {
-                let p = Some(csv::read_portfolio(&name)?);
+                let p = csv::read_portfolio(&name)?;
                 Ok((p, name))
             } else {
-                Ok((None, ask_for_new_file()?))
+                Err(String::from("No portfolios exist so far. Try running 'rustfolio new' to create one"))
             }
         },
     }
 }
 
-pub fn select_portfolio_file() -> Option<PathBuf> {
+pub fn create_portfolio_interactively(file_name: PathBuf) -> Result<Portfolio, String> {
+    if file_name.exists() {
+        Err(String::from("Portfolio with provided file_name already exists"))
+    } else {
+        let mut portfolio = Portfolio::new();
+        interaction::populate_new_portfolio(&mut portfolio);
+        csv::save_portfolio(&file_name, &portfolio).map_err(|e| format!("Failed to save portfolio: {}", e))?;
+        Ok(portfolio)
+    }
+}
+
+pub fn get_portfolio_name_interactively(portfolio_name: Option<String>) -> Result<PathBuf, String> {
+    fn validation(s: &String) -> Result<String, String> {
+        Ok(String::from(s))
+    }
+
+    let portfolio_name = portfolio_name.unwrap_or_else(|| {
+        let input = interaction::Input::new("Your portfolio name", validation);
+        input.ask_for_input().unwrap_or(String::new())
+    });
+
+    let temp_path = std::path::PathBuf::from(portfolio_name.trim());
+    match temp_path.file_stem() {
+        Some(stem) => {
+            super::files::get_full_path(stem)
+                .and_then(|mut path| { path.set_extension("csv"); Ok(path) })
+                .map_err(|e| e.to_string())
+        },
+        None => Err(String::from("Invalid portfolio name")),
+    }
+}
+
+fn select_portfolio_file() -> Option<PathBuf> {
     let mut files = super::files::list_data_files();
     if files.is_empty() {
         return None;
@@ -119,23 +130,4 @@ pub fn select_portfolio_file() -> Option<PathBuf> {
     }
 
     Some(interaction::select_one("Select portfolio", files.into_iter(), |f| super::files::as_file_stem(f)))
-}
-
-fn ask_for_new_file() -> Result<PathBuf, String> {
-
-    fn validation(s: &String) -> Result<String, String> {
-        Ok(String::from(s))
-    }
-
-    let input = interaction::Input::new("Your portfolio name", validation);
-    let portfolio_name = input.ask_for_input().unwrap_or(String::new());
-    let temp_path = std::path::PathBuf::from(portfolio_name.trim());
-    match temp_path.file_stem() {
-        Some(stem) => {
-            super::files::get_full_path(stem)
-                .and_then(|mut path| { path.set_extension("csv"); Ok(path) })
-                .map_err(|e| e.to_string())
-        },
-        None => Err(String::from("Invalid portfolio name")),
-    }
 }

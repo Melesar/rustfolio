@@ -45,7 +45,7 @@ pub fn read_portfolio(path: &Path) -> Result<Portfolio, String> {
     Ok(portfolio)
 }
 
-pub fn save_portfolio(path: &Path, portfolio: Portfolio) -> Result<(), String> {
+pub fn save_portfolio(path: &Path, portfolio: &Portfolio) -> Result<(), String> {
     let mut writer = csv::Writer::from_path(path).map_err(|e| e.to_string())?;
     let mut header = vec![""];
     header.extend(portfolio.categories());

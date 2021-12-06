@@ -8,29 +8,10 @@ use super::portfolio::{self, Portfolio};
 use super::interaction;
 
 pub fn add (file_name: Option<PathBuf>) -> Result<(), String> {
-    let (portfolio, path) = portfolio::get_or_create_portfolio_interactively(file_name)?;
-    if let Some(mut p) = portfolio {
-        update_categories(&mut p);
-        csv::save_portfolio(&path, p)?;
-    } else {
-        create_new_portfolio(path);
-    }
-
+    let (mut portfolio, path) = portfolio::get_portfolio_interactively(file_name)?;
+    update_categories(&mut portfolio);
+    csv::save_portfolio(&path, &portfolio)?;
     Ok(())
-}
-
-fn create_new_portfolio(path: PathBuf) {
-    let portfolio_name = path.file_stem().unwrap();
-    let confirmation_label = format!("Portfolio {} doesn't exist yet. Create?", portfolio_name.to_string_lossy());
-    if !interaction::confirmation(&confirmation_label, true) { 
-        return;
-    }
-
-    let mut portfolio = Portfolio::new();
-    interaction::populate_new_portfolio(&mut portfolio);
-    if let Err(s) = csv::save_portfolio(&path, portfolio) {
-        eprintln!("{}", s);
-    }
 }
 
 fn update_categories(portfolio: &mut Portfolio) {
