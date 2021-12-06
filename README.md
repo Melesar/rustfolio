@@ -46,7 +46,7 @@ rustfolio list
 ### Export a portfolio as a .csv file
 
 ```sh
-rustfolio export -o output.csv -p MyPortfolio
+rustfolio export -o output.csv --file MyPortfolio
 ```
 
-Flag `-p` can be omitted. In this case you will be promted to select one of the available portfolios
+Flag `--file` can be omitted. In this case you will be promted to select one of the available portfolios

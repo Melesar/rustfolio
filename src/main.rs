@@ -47,12 +47,7 @@ fn main() {
         .subcommand(SubCommand::with_name("export")
                     .about("Exports a portfolio as a .csv file")
                     .display_order(3)
-                    .arg(Arg::with_name("portfolio_name")
-                         .short("p")
-                         .long("portfolio")
-                         .help("Name of the portfolio to export")
-                         .required(false)
-                         .takes_value(true))
+                    .arg(file_arg.clone())
                     .arg(Arg::with_name("output_file")
                          .short("o")
                          .help("Output file path")
@@ -89,7 +84,7 @@ fn create_new_portfolio(matches: &ArgMatches) -> Result<(), String> {
 }
 
 fn export_portfolio(matches: &ArgMatches) -> Result<(), String> {
-    let portfolio_name = matches.value_of("portfolio_name").map(|s| s.to_string());
+    let portfolio_name = matches.value_of("file").map(|s| s.to_string());
     let file_path = std::path::Path::new(matches.value_of("output_file").unwrap());
     export::export_interactively(portfolio_name, file_path)
 }
