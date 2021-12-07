@@ -10,8 +10,8 @@ mod export;
 
 use std::path::PathBuf;
 use clap::{App, Arg, SubCommand, ArgMatches};
+use crossterm::tty::IsTty;
 
-#[derive(Debug)]
 enum DisplayStyle { Chart, Table }
 
 fn main() {
@@ -55,10 +55,26 @@ fn main() {
                          .required(true)))
         .get_matches();
 
+
+    let is_tty = std::io::stdout().is_tty() && std::io::stdin().is_tty();
+
+    let result = if is_tty {
+        run_interactively(&app_config) 
+    } else {
+        Err(String::from("Running in non-interactive mode is not supported (yet)")) 
+    };
+
+    match result {
+        Ok(()) => (),
+        Err(e) => eprintln!("{}", e),
+    };
+}
+
+fn run_interactively(app_config: &ArgMatches) -> Result<(), String> {
+
     let display_style = if app_config.is_present("table") { DisplayStyle::Table } else { DisplayStyle::Chart }; 
 
-    //TODO handle non-tty stdin
-    let result = if let Some(new_matches) = app_config.subcommand_matches("new") {
+    if let Some(new_matches) = app_config.subcommand_matches("new") {
         create_new_portfolio(&new_matches)
     } else if let Some(add_matches) = app_config.subcommand_matches("add") {
         let file_path = get_file_name(add_matches);
@@ -69,12 +85,7 @@ fn main() {
         export_portfolio(export_matches)
     } else {
         show_portfolio(&app_config, display_style)
-    };
-
-    match result {
-        Ok(()) => (),
-        Err(e) => eprintln!("{}", e),
-    };
+    }
 }
 
 fn create_new_portfolio(matches: &ArgMatches) -> Result<(), String> {
