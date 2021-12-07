@@ -1,0 +1,30 @@
+name: Rust
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux-build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose --release
+    - name: Run tests
+      run: cargo test --verbose
+      
+  macos-build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose --release
+    - name: Run tests
+      run: cargo test --verbose
