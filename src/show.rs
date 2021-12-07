@@ -16,6 +16,15 @@ pub fn show_as_chart(portfolio: &Portfolio) -> Result<(), String>{
             .map(|(((category, amount), color), symbol)| Data { label: category.to_string(), value: **amount, color: Some(Style::new().fg(Color::Fixed(*color))), fill: *symbol })
             .collect::<Vec<Data>>();
 
+        let total_value = data.iter().map(|d| d.value).sum::<f32>();
+        
+        //These are needed because otherwise Chart::draw_into will panic
+        if data.is_empty() {
+            return Err(String::from("Portfolio is empty"));
+        } else if total_value <= 0.0 {
+            return Err(String::from("Portfolio should have at least one value greater than zero"));
+        }
+
         let radius = 9_u16;
         let aspect = 4_u16;
         let result = Chart::new()
