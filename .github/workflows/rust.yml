@@ -20,7 +20,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v2.2.4
       with:
-        name: Executable
+        name: rustfolio-linux
         path: target/release/rustfolio
       
   macos-build:
@@ -33,3 +33,8 @@ jobs:
       run: cargo build --verbose --release
     - name: Run tests
       run: cargo test --verbose
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        name: rustfolio-macos
+        path: target/release/rustfolio
