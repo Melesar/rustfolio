@@ -104,17 +104,6 @@ pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Portfo
     }
 }
 
-pub fn create_portfolio_interactively(file_name: PathBuf) -> Result<Portfolio, String> {
-    if file_name.exists() {
-        Err(String::from("Portfolio with provided file_name already exists"))
-    } else {
-        let mut portfolio = Portfolio::new();
-        interaction::populate_new_portfolio(&mut portfolio);
-        csv::save_portfolio(&file_name, &portfolio).map_err(|e| format!("Failed to save portfolio: {}", e))?;
-        Ok(portfolio)
-    }
-}
-
 pub fn get_portfolio_name_interactively(portfolio_name: Option<String>) -> Result<PathBuf, String> {
     fn validation(s: &String) -> Result<String, String> {
         Ok(String::from(s))

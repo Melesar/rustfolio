@@ -8,6 +8,7 @@ mod files;
 mod list;
 mod export;
 mod redirection;
+mod new;
 
 use std::path::PathBuf;
 use clap::{App, Arg, SubCommand, ArgMatches};
@@ -93,8 +94,8 @@ fn run_interactively(app_config: &ArgMatches) -> Result<(), String> {
 
 fn create_new_portfolio(matches: &ArgMatches) -> Result<(), String> {
     let portfolio_name = matches.value_of("portfolio_name");
-    let path = portfolio::get_portfolio_name_interactively(portfolio_name.map(|s| s.to_string()));
-    path.and_then(|p| portfolio::create_portfolio_interactively(p)).map(|_| ())
+    let path = portfolio::get_portfolio_name_interactively(portfolio_name.map(|s| s.to_string()))?;
+    new::create_portfolio_interactively(path)
 }
 
 fn export_portfolio(matches: &ArgMatches) -> Result<(), String> {
