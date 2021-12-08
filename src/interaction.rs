@@ -48,7 +48,7 @@ pub fn populate_new_portfolio(portfolio: &mut super::portfolio::Portfolio) {
     let mut data = vec![];
     let category_input = Input::new("Category name", |s| Ok(String::from(s)))
         .esc_interrupts(true);
-    let amount_input = Input::new("Amount", super::add_interactively::validate_amount)
+    let amount_input = Input::new("Amount", super::add::validate_amount)
         .esc_interrupts(true);
     loop {
         let category = category_input.ask_for_input();

@@ -51,6 +51,12 @@ impl<'a> Portfolio {
     }
 }
 
+pub fn get_portfolio_path(portfolio_name: String) -> Result<PathBuf, String> {
+    files::get_full_path(portfolio_name).map_or_else(
+                |e| { Err(format!("Failed to handle file name: {}", e))},
+                |mut f| { f.set_extension("csv"); Ok(f) })
+}
+
 pub fn get_portfolio_contents(portfolio_name: String) -> Result<String, String> { 
     let portfolio_path = files::list_data_files().into_iter()
         .find(|f| files::as_file_stem(f).eq(&portfolio_name));

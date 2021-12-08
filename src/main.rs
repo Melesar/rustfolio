@@ -2,11 +2,12 @@ mod interaction;
 mod currency;
 mod portfolio;
 mod csv;
-mod add_interactively;
+mod add;
 mod show;
 mod files;
 mod list;
 mod export;
+mod redirection;
 
 use std::path::PathBuf;
 use clap::{App, Arg, SubCommand, ArgMatches};
@@ -56,12 +57,14 @@ fn main() {
         .get_matches();
 
 
-    let is_tty = std::io::stdout().is_tty() && std::io::stdin().is_tty();
+    let is_stdin_redirected = !std::io::stdin().is_tty();
+    let is_stdout_redirected = !std::io::stdout().is_tty();
+    let is_tty = !is_stdout_redirected && !is_stdin_redirected;
 
     let result = if is_tty {
         run_interactively(&app_config) 
     } else {
-        Err(String::from("Running in non-interactive mode is not supported (yet)")) 
+        redirection::run_redirected(is_stdin_redirected, is_stdout_redirected, &app_config)
     };
 
     match result {
@@ -77,8 +80,8 @@ fn run_interactively(app_config: &ArgMatches) -> Result<(), String> {
     if let Some(new_matches) = app_config.subcommand_matches("new") {
         create_new_portfolio(&new_matches)
     } else if let Some(add_matches) = app_config.subcommand_matches("add") {
-        let file_path = get_file_name(add_matches);
-        add_interactively::add(file_path)
+        let file_path = get_portfolio_path(add_matches);
+        add::add_interactively(file_path)
     } else if app_config.subcommand_matches("list").is_some() {
         list::list_portfolio_files()
     } else if let Some(export_matches) = app_config.subcommand_matches("export") {
@@ -101,7 +104,7 @@ fn export_portfolio(matches: &ArgMatches) -> Result<(), String> {
 }
 
 fn show_portfolio(app_config: &ArgMatches, style: DisplayStyle) -> Result<(), String> {
-    let file_path = get_file_name(app_config);
+    let file_path = get_portfolio_path(app_config);
     let (portfolio, _) = portfolio::get_portfolio_interactively(file_path)?;
     match style {
         DisplayStyle::Chart => show::show_as_chart(&portfolio),
@@ -109,11 +112,9 @@ fn show_portfolio(app_config: &ArgMatches, style: DisplayStyle) -> Result<(), St
     }
 }
 
-fn get_file_name(matches: &ArgMatches) -> Option<PathBuf> {
+fn get_portfolio_path(matches: &ArgMatches) -> Option<PathBuf> {
     let file_name = matches.value_of("file").map(|s| s.to_string());
 
-    file_name.and_then(|f| files::get_full_path(f).map_or_else(
-                |e| { eprintln!("Failed to handle file name: {}", e); None},
-                |mut f| { f.set_extension("csv"); Some(f) }))
+    file_name.and_then(|f| portfolio::get_portfolio_path(f).ok())
 }
 
