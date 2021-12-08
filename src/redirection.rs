@@ -1,21 +1,38 @@
 use clap::ArgMatches;
 
 use std::path::Path;
-use crate::{add, export, list};
+use crate::{add, export, list, portfolio, csv, show};
 
 pub fn run_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
     if let Some(add_matches) = matches.subcommand_matches("add") {
-        add_redirected(is_stdin_redirected, is_stdout_redirected, add_matches)
+        add(is_stdin_redirected, is_stdout_redirected, add_matches)
+    } else if let Some(new_matches) = matches.subcommand_matches("new") {
+        Ok(()) //TODO implement
     } else if let Some(export_matches) = matches.subcommand_matches("export") {
-        export_redirected(&export_matches)
+        export(&export_matches)
     } else if matches.is_present("list") {
-        list_redirected(is_stdout_redirected)
+        list(is_stdout_redirected)
     } else {
-        Err(String::from("Only 'add' and 'export' subcommands are supported in non-interactive mode so far"))
+        show(is_stdout_redirected, matches)
     }
 }
 
-fn add_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
+fn show(is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
+    let file_name = matches.value_of("file").ok_or(String::from("--file option is required in non-interactive mode"))?;
+    let is_table = matches.is_present("table");
+
+    
+    if is_stdout_redirected && !is_table {
+        println!("{}", portfolio::get_portfolio_contents(file_name.to_string())?);
+        Ok(())
+    } else if is_stdout_redirected {
+        show::show_as_table(&portfolio::get_portfolio(file_name.to_string())?)
+    } else {
+        show::show_as_chart(&portfolio::get_portfolio(file_name.to_string())?)
+    }
+}
+
+fn add(is_stdin_redirected: bool, is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
     if is_stdout_redirected && !is_stdin_redirected {
         let mut error_msg = String::from("Sorry, 'rustfolio add' doesn't work with redirected stdout and tty stdin. ");
         error_msg.push_str("Try piping data into it as following:\n");
@@ -32,14 +49,14 @@ fn add_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, matches
     add::add_redirected(file_name)
 }
 
-fn export_redirected(matches: &ArgMatches) -> Result<(), String> {
+fn export(matches: &ArgMatches) -> Result<(), String> {
     let output_file = matches.value_of("output_file").unwrap();
     let portfolio_name = matches.value_of("file").ok_or(String::from("--file option is required in non-interactive mode"))?;
 
     export::export_redirected(portfolio_name.to_string(), Path::new(output_file))
 }
 
-fn list_redirected(is_stdout_redirected: bool) -> Result<(), String> {
+fn list(is_stdout_redirected: bool) -> Result<(), String> {
     if is_stdout_redirected {
         list::list_portfolio_files_redirected();
         Ok(())

@@ -78,6 +78,11 @@ pub fn get_portfolio_contents_interactively() -> Result<String, String> {
     }
 }
 
+pub fn get_portfolio(portfolio_name: String) -> Result<Portfolio, String> {
+    let portfolio_path = get_portfolio_path(portfolio_name.to_string())?;
+    csv::read_portfolio(&portfolio_path)
+}
+
 pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Portfolio, PathBuf), String> {
     match file_name {
         Some(name) => {
