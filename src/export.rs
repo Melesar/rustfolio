@@ -11,3 +11,8 @@ pub fn export_interactively(portfolio_name: Option<String>, path: &Path) -> Resu
 
     std::fs::write(path, portfolio).map_err(|e| format!("Failed to export portfolio: {}", e))
 }
+
+pub fn export_redirected(portfolio_name: String, path: &Path) -> Result<(), String> {
+    let portfolio = portfolio::get_portfolio_contents(portfolio_name)?;
+    std::fs::write(path, portfolio).map_err(|e| format!("Failed to export portfolio: {}", e))
+}

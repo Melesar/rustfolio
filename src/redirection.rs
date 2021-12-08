@@ -1,12 +1,15 @@
 use clap::ArgMatches;
 
-use crate::add;
+use std::path::Path;
+use crate::{add, export};
 
 pub fn run_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
     if let Some(add_matches) = matches.subcommand_matches("add") {
         add_redirected(is_stdin_redirected, is_stdout_redirected, add_matches)
+    } else if let Some(export_matches) = matches.subcommand_matches("export") {
+        export_redirected(&export_matches)
     } else  {
-        Err(String::from("Only 'add' subcommand is supported in non-interactive mode so far"))
+        Err(String::from("Only 'add' and 'export' subcommands are supported in non-interactive mode so far"))
     }
 }
 
@@ -25,4 +28,11 @@ fn add_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, matches
 
 
     add::add_redirected(file_name)
+}
+
+fn export_redirected(matches: &ArgMatches) -> Result<(), String> {
+    let output_file = matches.value_of("output_file").unwrap();
+    let portfolio_name = matches.value_of("file").ok_or(String::from("--file option is required in non-interactive mode"))?;
+
+    export::export_redirected(portfolio_name.to_string(), Path::new(output_file))
 }
