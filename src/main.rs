@@ -83,7 +83,7 @@ fn run_interactively(app_config: &ArgMatches) -> Result<(), String> {
         let file_path = get_portfolio_path(add_matches);
         add::add_interactively(file_path)
     } else if app_config.subcommand_matches("list").is_some() {
-        list::list_portfolio_files()
+        list::list_portfolio_files(); Ok(())
     } else if let Some(export_matches) = app_config.subcommand_matches("export") {
         export_portfolio(export_matches)
     } else {

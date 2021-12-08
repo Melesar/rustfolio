@@ -6,7 +6,7 @@ use crossterm::{
     queue,
 };
 
-pub fn list_portfolio_files() -> Result<(), String> {
+pub fn list_portfolio_files() {
     let files : Vec<String> = files::list_data_files()
         .into_iter()
         .map(|f| files::as_file_stem(&f))
@@ -14,7 +14,6 @@ pub fn list_portfolio_files() -> Result<(), String> {
 
     if files.is_empty() {
         println!("You have no portfolios yet");
-        return Ok(());
     }
 
     let num_items = files.len();
@@ -27,6 +26,20 @@ pub fn list_portfolio_files() -> Result<(), String> {
     for (idx, portfolio_name) in files.into_iter().enumerate() {
         println!("  {}. {}", idx + 1, portfolio_name);
     }
+}
 
-    Ok(())
+pub fn list_portfolio_files_redirected() {
+    
+    let files : Vec<String> = files::list_data_files()
+        .into_iter()
+        .map(|f| files::as_file_stem(&f))
+        .collect();
+
+    if files.is_empty() {
+        return;
+    }
+
+    for file_name in files {
+        println!("{}", file_name);
+    }
 }
