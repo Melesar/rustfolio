@@ -8,7 +8,7 @@ Rustfolio is a program for monitoring your investment portfolio. It's main purpo
 
 ### With Cargo
 
-[Install](https://www.rust-lang.org/tools/install) Cargo and Rust: .rust-lang.org/tools/install. Once Cargo is in your $PATH, run
+[Install](https://www.rust-lang.org/tools/install) Cargo and Rust. Once Cargo is in your $PATH, run
 
 ```sh
 cargo install rustfolio
