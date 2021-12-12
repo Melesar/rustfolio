@@ -69,10 +69,20 @@ fn new(is_stdin_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
         return Err(error_msg);
     }
 
-    //TODO add a flag to read portfolio name from stdin
-    let portfolio_name = matches.value_of("portfolio_name").ok_or(String::from("<NAME> argument is required in non-interactive mode"))?;
-    let portfolio_path = portfolio::get_portfolio_path(portfolio_name.to_string())?;
+    let should_read_name = matches.is_present("read_name");
+    let portfolio_name = if let Some(name) = matches.value_of("portfolio_name") {
+        if !should_read_name {
+            Ok(String::from(name))
+        } else {
+            Err(String::from("Warning: the <NAME> argument and --read-name flag may not work together correctly. Aborting"))
+        }
+    } else if should_read_name {
+        portfolio::read_portfolio_name()
+    } else {
+        Err(String::from("Either <NAME> argument or --read-name flag are required in non-interactive mode"))
+    }?;
 
+    let portfolio_path = portfolio::get_portfolio_path(portfolio_name.to_string())?;
     new::create_portfolio_redirected(portfolio_path)
 }
 
