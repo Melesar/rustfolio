@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use std::path::PathBuf;
 use chrono::Local;
 
 use crate::currency::Currency;
+use crate::redirection;
 
 use super::csv;
 use super::portfolio::{self, Portfolio};
@@ -18,31 +18,8 @@ pub fn add_interactively (file_name: Option<PathBuf>) -> Result<(), String> {
 pub fn add_redirected(file_name: String) -> Result<(), String> {
     let portfolio_path = portfolio::get_portfolio_path(file_name)?;
     let mut portfolio = csv::read_portfolio(&portfolio_path)?;
-
-    let stdin = std::io::stdin();
-    let mut buffer = String::new();
-
-    let mut current_category : Option<String> = None;
-    let mut update_table = HashMap::new();
-    while stdin.read_line(&mut buffer).unwrap_or(0) > 0 {
-        if let Some(category) = current_category.as_ref() {
-            let amount = validate_amount(&buffer.trim().to_string());
-
-            if amount.is_err() { 
-                current_category = None;
-                buffer.clear();
-                continue;
-            }
-
-            update_table.insert(category.clone(), amount.unwrap());
-            current_category = None;
-        } else {
-            current_category = Some(buffer.trim().to_string());
-        }
-
-        buffer.clear();
-    }
-
+    let update_table = redirection::collect_portfolio_data();
+    
     let mut data = vec![];
     for category in portfolio.categories() {
         let amount = update_table.get(category)
@@ -51,6 +28,7 @@ pub fn add_redirected(file_name: String) -> Result<(), String> {
     }
 
     portfolio.set_data_for_date(Local::now(), data);
+
     csv::save_portfolio(&portfolio_path, &portfolio)
 }
 
@@ -75,5 +53,3 @@ fn update_categories(portfolio: &mut Portfolio) {
 
     portfolio.set_data_for_date(date, data);
 }
-
-

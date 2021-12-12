@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 
 use chrono::{DateTime, Local};
 
+use crate::portfolio;
+
 use super::{csv, interaction};
 use super::currency::Currency;
 use super::files;
@@ -38,6 +40,10 @@ impl<'a> Portfolio {
 
     pub fn add_category(&mut self, category: String) {
         self.categories.push(category);
+    }
+
+    pub fn add_categories(&mut self, categories: Vec<String>) {
+        self.categories = categories;
     }
 
     pub fn get_latest_value(&self, category: &str) -> Option<Currency> {
@@ -104,25 +110,19 @@ pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Portfo
     }
 }
 
-pub fn get_portfolio_name_interactively(portfolio_name: Option<String>) -> Result<PathBuf, String> {
+pub fn get_portfolio_name_interactively(portfolio_name: Option<String>) -> String {
     fn validation(s: &String) -> Result<String, String> {
         Ok(String::from(s))
     }
 
-    let portfolio_name = portfolio_name.unwrap_or_else(|| {
+    portfolio_name.unwrap_or_else(|| {
         let input = interaction::Input::new("Your portfolio name", validation);
         input.ask_for_input().unwrap_or(String::new())
-    });
+    })
+}
 
-    let temp_path = std::path::PathBuf::from(portfolio_name.trim());
-    match temp_path.file_stem() {
-        Some(stem) => {
-            super::files::get_full_path(stem)
-                .and_then(|mut path| { path.set_extension("csv"); Ok(path) })
-                .map_err(|e| e.to_string())
-        },
-        None => Err(String::from("Invalid portfolio name")),
-    }
+pub fn read_portfolio_name() -> String {
+    String::new()
 }
 
 fn select_portfolio_file() -> Option<PathBuf> {

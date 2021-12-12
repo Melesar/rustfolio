@@ -1,7 +1,10 @@
 use clap::ArgMatches;
 
+use chrono::Local;
+use std::collections::HashMap;
 use std::path::Path;
-use crate::{add, export, list, portfolio, show, new, csv};
+
+use crate::{add, export, list, portfolio::{self, Portfolio}, show, new, currency::Currency};
 
 pub fn run_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
     if let Some(add_matches) = matches.subcommand_matches("add") {
@@ -15,6 +18,34 @@ pub fn run_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, mat
     } else {
         show(is_stdout_redirected, matches)
     }
+}
+
+pub fn collect_portfolio_data() -> HashMap<String, f32> {
+    let stdin = std::io::stdin();
+    let mut buffer = String::new();
+
+    let mut current_category : Option<String> = None;
+    let mut update_table = HashMap::new();
+    while stdin.read_line(&mut buffer).unwrap_or(0) > 0 {
+        if let Some(category) = current_category.as_ref() {
+            let amount = add::validate_amount(&buffer.trim().to_string());
+
+            if amount.is_err() { 
+                current_category = None;
+                buffer.clear();
+                continue;
+            }
+
+            update_table.insert(category.clone(), amount.unwrap());
+            current_category = None;
+        } else {
+            current_category = Some(buffer.trim().to_string());
+        }
+
+        buffer.clear();
+    }
+
+    update_table
 }
 
 fn show(is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
