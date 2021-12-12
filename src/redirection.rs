@@ -1,10 +1,9 @@
 use clap::ArgMatches;
 
-use chrono::Local;
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::{add, export, list, portfolio::{self, Portfolio}, show, new, currency::Currency};
+use crate::{add, export, list, portfolio, show, new};
 
 pub fn run_redirected(is_stdin_redirected: bool, is_stdout_redirected: bool, matches: &ArgMatches) -> Result<(), String> {
     if let Some(add_matches) = matches.subcommand_matches("add") {

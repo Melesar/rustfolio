@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 
@@ -110,19 +111,26 @@ pub fn get_portfolio_interactively(file_name: Option<PathBuf>) -> Result<(Portfo
     }
 }
 
-pub fn get_portfolio_name_interactively(portfolio_name: Option<String>) -> String {
+pub fn get_portfolio_name_interactively(portfolio_name: Option<String>) -> Result<String, String> {
     fn validation(s: &String) -> Result<String, String> {
-        Ok(String::from(s))
+        if s.len() > 0 { Ok(s.clone()) } else { Err(String::from("Portfolio name cannot be empty")) }
     }
 
-    portfolio_name.unwrap_or_else(|| {
+    if let Some(name) = portfolio_name {
+        Ok(name)
+    } else {
         let input = interaction::Input::new("Your portfolio name", validation);
-        input.ask_for_input().unwrap_or(String::new())
-    })
+        input.ask_for_input()
+    }
 }
 
-pub fn read_portfolio_name() -> String {
-    String::new()
+pub fn read_portfolio_name() -> Result<String, String> {
+    let mut buffer = String::new();
+    std::io::stdin().read_line(&mut buffer)
+        .map_err(|e| format!("Failed to read portfolio name: {}", e))?;
+    let buffer = String::from(buffer.trim());
+
+    if buffer.len() > 0 { Ok(buffer) } else { Err(String::from("Portfolio name cannot be empty")) }
 }
 
 fn select_portfolio_file() -> Option<PathBuf> {

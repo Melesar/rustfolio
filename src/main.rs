@@ -38,7 +38,10 @@ fn main() {
                     .display_order(0)
                     .arg(Arg::with_name("portfolio_name")
                          .help("Name of the new portfolio")
-                         .value_name("NAME")))
+                         .value_name("NAME"))
+                    .arg(Arg::with_name("read_name")
+                         .help("Indicates that portfolio name should be read from stdin")
+                         .long("read-name")))
         .subcommand(SubCommand::with_name("add")
                     .about("Adds a new entry to a portfolio")
                     .display_order(1)
@@ -93,8 +96,14 @@ fn run_interactively(app_config: &ArgMatches) -> Result<(), String> {
 }
 
 fn create_new_portfolio(matches: &ArgMatches) -> Result<(), String> {
-    let portfolio_name = matches.value_of("portfolio_name");
-    let path = portfolio::get_portfolio_name_interactively(portfolio_name.map(|s| s.to_string()))?;
+    let portfolio_name = if matches.is_present("read_name") {
+        portfolio::read_portfolio_name()
+    } else {
+        let portfolio_name = matches.value_of("portfolio_name");
+        portfolio::get_portfolio_name_interactively(portfolio_name.map(|s| s.to_string()))
+    }?;
+
+    let path = portfolio::get_portfolio_path(portfolio_name)?;
     new::create_portfolio_interactively(path)
 }
 
