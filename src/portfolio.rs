@@ -1,10 +1,7 @@
-use std::io::Read;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Local};
-
-use crate::portfolio;
 
 use super::{csv, interaction};
 use super::currency::Currency;
