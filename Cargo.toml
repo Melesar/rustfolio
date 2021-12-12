@@ -1,6 +1,6 @@
 [package]
 name = "rustfolio"
-version = "0.3.0"
+version = "1.0.0"
 authors = ["Sergey Pikhota <sergey@pikhota.com>"]
 description = "A simple tool for monitoring an investment portfolio"
 repository = "https://github.com/Melesar/rustfolio"
