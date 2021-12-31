@@ -5,6 +5,7 @@ authors = ["Sergey Pikhota <sergey@pikhota.com>"]
 description = "A simple tool for monitoring an investment portfolio"
 repository = "https://github.com/Melesar/rustfolio"
 keywords = ["portfolio"]
+homepage = "https://github.com/Melesar/rustfolio"
 categories = ["command-line-utilities", "visualization"]
 license = "MIT"
 readme = "README.md"
