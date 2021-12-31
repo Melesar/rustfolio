@@ -14,6 +14,14 @@ Rustfolio is a program for monitoring your investment portfolio. It's main purpo
 cargo install rustfolio
 ```
 
+### From AUR
+
+On Arch Linux, you can download `rustfolio` from the [AUR](https://aur.archlinux.org/). Package name is `rustfolio-bin`. Assuming you use [paru](https://github.com/Morganamilo/paru) as your aur helper, the command looks as following:
+
+```sh
+paru -S rustfolio-bin
+```
+
 ### From binary
 
 Grab the latest binary for your platform on Github [releases](https://github.com/Melesar/rustfolio/releases) page. Put the binary somewhere in your $PATH. Run `rustfolio -V` to make sure it is installed properly.
